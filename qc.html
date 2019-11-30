@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Pengyi Yang" />
+
+
+<title>Preprocessing (phospho)proteomics data</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/paper.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<script src="site_libs/navigation-1.1/codefolding.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 64px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 69px;
+  margin-top: -69px;
+}
+.section h2 {
+  padding-top: 69px;
+  margin-top: -69px;
+}
+.section h3 {
+  padding-top: 69px;
+  margin-top: -69px;
+}
+.section h4 {
+  padding-top: 69px;
+  margin-top: -69px;
+}
+.section h5 {
+  padding-top: 69px;
+  margin-top: -69px;
+}
+.section h6 {
+  padding-top: 69px;
+  margin-top: -69px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
+<script>
+$(document).ready(function () {
+  window.initializeCodeFolding("show" === "show");
+});
+</script>
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">PhosR - BioInfoSummer Workshop</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="qc.html">QC &amp; pre-processing</a>
+</li>
+<li>
+  <a href="pathway.html">Pathway analysis</a>
+</li>
+<li>
+  <a href="timecourse.html">Time-course analysis</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+<div class="btn-group pull-right">
+<button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+</ul>
+</div>
+
+
+
+<h1 class="title toc-ignore">Preprocessing (phospho)proteomics data</h1>
+<h4 class="author">Pengyi Yang</h4>
+<h4 class="date">Dec 2019</h4>
+
+</div>
+
+
+<div id="introduction" class="section level1">
+<h1><span class="header-section-number">1</span> Introduction</h1>
+<p>Before we can start interpreting biology from our phoshoproteomic data, the first step is to perform data preprocessing and QC. These include (but not limited to) assessing data quality, filtering, imputing missing values where appropriate, and normalising data to remove batch effects. PhosR package implements various functions for achieving these goals. Here, we will introduce a few QC measures and demonstrate some of the key functions for data normalisation and imputation.</p>
+</div>
+<div id="analysis-on-esc-differentiation-dataset" class="section level1">
+<h1><span class="header-section-number">2</span> Analysis on ESC differentiation dataset</h1>
+<p>The ESC differentiation dataset contains the temporal phosphoproteome profile during mouse embryonic stem cell (ESC) differentiation to epiblast-like cells (EpiLC) (<a href="https://doi.org/10.1016/j.cels.2019.03.012">Pengyi Yang et al. 2019</a>), using <code>label free</code> approach. There are 12 profiled time points including 0h (ESC), 5min, 15min, 30min, 1h, 3h, 6h, 12h, 24h, 36h, 48h, and 72h (EpiLC). The dataset in plain text file <code>ESC_Phospho (STY)Sites.txt</code> is avaliable from (xxx). This file contains essentailly the orignal output from MaxQuant (<a href="https://www.maxquant.org/" class="uri">https://www.maxquant.org/</a>) which is a software for quantifying mass spectrometry machine outputs. We will start by loading PhosR package for subsequent analysis.</p>
+<pre class="r"><code>library(PhosR)</code></pre>
+<div id="data-wrangling" class="section level2">
+<h2><span class="header-section-number">2.1</span> Data wrangling</h2>
+<p>We can load the data into R using the <code>read.delim()</code> function. Note that the first row contains header information.</p>
+<pre class="r"><code>phospho.raw &lt;- read.delim(&quot;/Users/pengyiyang/Dropbox (Sydney Uni)/SMoS/Teaching &amp; Supervision/BioInfoSummer 19/ESC_Phospho (STY)Sites.txt&quot;, header = TRUE)</code></pre>
+<p>After reading in the text file, we will extract some useful column information and concatenate them into strings as use them as id for each of our phosphosite in the dataset.</p>
+<pre class="r"><code>Ids &lt;- paste(paste(sapply(strsplit(as.character(phospho.raw[,&quot;Protein&quot;]), &quot;;&quot;), function(x){x[1]}),
+             sapply(strsplit(as.character(phospho.raw[,&quot;Gene.names&quot;]), &quot;;&quot;), function(x){x[1]}),
+             paste(as.character(phospho.raw[,&quot;Amino.acid&quot;]), as.character(phospho.raw[,&quot;Position&quot;]), sep=&quot;&quot;),
+             sapply(strsplit(as.character(phospho.raw[,&quot;Sequence.window&quot;]), &quot;;&quot;), function(x){x[1]}), sep=&quot;~&quot;))
+
+Ids[1:10]</code></pre>
+<pre><code>##  [1] &quot;A0A023T672~RBM8~S24~EAGGEDFAMDEDGDESIHKLKEKAKKRKGRG&quot; 
+##  [2] &quot;A0A023T672~RBM8~S56~FGSEGSRARMREDYDSVEQDGDEPGPQRSVE&quot; 
+##  [3] &quot;A0A023T672~RBM8~S42~KLKEKAKKRKGRGFGSEEGSRARMREDYDSV&quot; 
+##  [4] &quot;A0A023T672~RBM8~S46~KAKKRKGRGFGSEEGSRARMREDYDSVEQDG&quot; 
+##  [5] &quot;A0A023T672~RBM8~S166~VRGPPKGKRRGGRRRSRSPDRRRR_______&quot;
+##  [6] &quot;A0A023T672~RBM8~S168~GPPKGKRRGGRRRSRSPDRRRR_________&quot;
+##  [7] &quot;Q9R0X5~Rpgr~S914~NENPKGHMYDRVKSSSSEILGGNDPTSKDIK&quot;    
+##  [8] &quot;Q9CWZ3-2~Rbm8a~S42~KLKEKAKKRKGRGFGSEGSRARMREDYDSVE&quot;  
+##  [9] &quot;Q9CWZ3-2~Rbm8a~S45~EKAKKRKGRGFGSEGSRARMREDYDSVEQDG&quot;  
+## [10] &quot;O70589-3~Cask~S570~GSITFKIVPSYRTQSSSCEDLPSTTQPKGRQ&quot;</code></pre>
+<pre class="r"><code>rownames(phospho.raw) &lt;- Ids</code></pre>
+<p>Before we going forward, the first thing to do is to remove <code>Reverse</code> and <code>Potential.contaminant</code> entries. These are entires that are reported by MaxQuant. They are either false positive identifications (in case of <code>Reverse</code>) or real identification contaminated proteins other than those extracted from cells of interests.</p>
+<pre class="r"><code>del &lt;- which(phospho.raw[,&quot;Reverse&quot;] == &quot;+&quot; | phospho.raw[,&quot;Potential.contaminant&quot;] == &quot;+&quot;)
+phospho.clean &lt;- phospho.raw[-del,]</code></pre>
+<p>Next, we will select columns that correspond to phosphosite quantification. These columns normally start with the key word <code>Intensity</code> and follow with sample-specific information. After selecting extracting the raw data from these columns we will transform the data using log2 and mark the missing values as <code>NA</code></p>
+<pre class="r"><code>selected.cols &lt;- grep(&quot;^Intensity.+_\\d&quot;, colnames(phospho.clean))
+phospho.exp.full &lt;- log2(as.matrix(phospho.clean[,selected.cols]))
+phospho.exp.full[is.infinite(phospho.exp.full)] &lt;- NA</code></pre>
+<p>We will also remove the time points after 6 hours for this analysis. Do you know why?</p>
+<pre class="r"><code>phospho.exp &lt;- phospho.exp.full[,c(1:4, 37:40, 9:12, 21:24, 13:16, 29:32, 41:44)]</code></pre>
+<p>Now, we have the quantification of all phosphosites in this experiment saved in <code>phospho.exp.raw</code>. Let us start with some basic QC.</p>
+<pre class="r"><code>dim(phospho.exp)</code></pre>
+<pre><code>## [1] 37620    28</code></pre>
+<pre class="r"><code># color code by replicates at each time point
+grps &lt;- gsub(&quot;_\\d&quot;, &quot;&quot;, colnames(phospho.exp))
+cs &lt;- rainbow(length(unique(grps)))
+colorCodes &lt;- sapply(grps, switch, Intensity.0m=cs[1], Intensity.5m=cs[2],
+                 Intensity.15m=cs[3], Intensity.30m=cs[4], Intensity.1h=cs[5], Intensity.3h=cs[6], Intensity.6h=cs[7])
+
+par(mfrow=c(2,1))
+plotQC(phospho.exp, panel = 1, cols = colorCodes)
+plotQC(phospho.exp, panel = 2, cols = colorCodes)</code></pre>
+<p><img src="qc_files/figure-html/unnamed-chunk-6-1.png" width="960" /></p>
+<p>Notice that we have plotted the percentage of missing values and performed a hierarchical clustering using the <code>plotQC</code> function which is part of the <code>PhosR</code> package.</p>
+</div>
+<div id="filtering-of-phophosites" class="section level2">
+<h2><span class="header-section-number">2.2</span> Filtering of phophosites</h2>
+<p>Given the high percentage of missing values (&gt;50%), we will start by performing some filtering to remove phosphosites that are unquantified in majority of the samples. We introduce two filtering functions implemented in <code>PhosR</code>. They are <code>selectGrps</code> and <code>selectOverallPercent</code>. The <code>selectGrps</code> function select phosphosites by requring the percentage of quantified values in a treatment group to be equal or higher than a given value [0-1], and the number of treatment groups that meet this cutoff. For example, the following code filter to select phosphosites that have 75% (3 out of 4 replicates in case of ESC dataset) quantified in at least 3 time point.</p>
+<pre class="r"><code>phospho.exp.filtered1 &lt;- selectGrps(phospho.exp, grps = grps, percent = 0.75, n = 3)</code></pre>
+<p>The second function <code>selectOverallPercent</code> allows the selection of phosphosites that have be quantified in at least a given percentage of all samples. For example, the following select sites that have been quantified in 30% of all samples.</p>
+<pre class="r"><code># filter to select phosphosites that have be quantified in at least 30% of all samples
+phospho.exp.filtered2 &lt;- selectOverallPercent(phospho.exp.filtered1, percent = 0.3)
+dim(phospho.exp.filtered2)</code></pre>
+<pre><code>## [1] 15388    28</code></pre>
+<pre class="r"><code>par(mfrow=c(2,1))
+plotQC(phospho.exp.filtered2, panel = 1, cols = colorCodes)
+plotQC(phospho.exp.filtered2, panel = 2, cols = colorCodes)</code></pre>
+<p><img src="qc_files/figure-html/unnamed-chunk-8-1.png" width="960" /></p>
+</div>
+<div id="imputation" class="section level2">
+<h2><span class="header-section-number">2.3</span> Imputation</h2>
+<p>Now we have filtered the phosphosites that have large number of missing values, we will perform imputation to the remaining phosphosites so that subsequent analyses that require full matrix could be conducted properly. Before we perform imputation, we use the following code to perform a median-based centring of data in each treatment/time point.</p>
+<pre class="r"><code># centring data across their median
+phospho.exp.scaled &lt;- medianScaling(phospho.exp.filtered2, scale = FALSE)
+boxplot(phospho.exp.scaled, col=colorCodes, las=2)</code></pre>
+<p><img src="qc_files/figure-html/unnamed-chunk-9-1.png" width="960" /></p>
+<p>We will use the following two steps for data imputation:</p>
+<ul>
+<li>First impute data by time points for each phosphosite. For each time point, we will impute the missing value if 50% (2 out of 4) replicates are quantified.</li>
+<li>Second impute the rest of the missing values using lower-tail imputation (<code>tImpute</code>)</li>
+</ul>
+<pre class="r"><code>set.seed(1)
+# step 1
+phospho.exp.imputed1 &lt;- ssImpute(phospho.exp.scaled, percent = 0.5, grps = grps)
+# step 2
+phospho.exp.imputed &lt;- tImpute(phospho.exp.imputed1)
+# finally, convert the data into ratios with respect to the first time point (0h)
+phospho.exp.ratio &lt;- phospho.exp.imputed - rowMeans(phospho.exp.imputed[,1:4])
+plotQC(phospho.exp.ratio, col=colorCodes)</code></pre>
+<p><img src="qc_files/figure-html/unnamed-chunk-10-1.png" width="960" /></p>
+<h4>
+<span class="glyphicon glyphicon-education" aria-hidden="true"></span> Quick quiz
+</h4>
+<ol style="list-style-type: decimal">
+<li>How many phosphosites do we have now?</li>
+<li>Did we lose any time points (columns)?</li>
+</ol>
+</div>
+</div>
+<div id="session-info" class="section level1">
+<h1><span class="header-section-number">3</span> Session Info</h1>
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>## R version 3.6.0 (2019-04-26)
+## Platform: x86_64-apple-darwin15.6.0 (64-bit)
+## Running under: macOS  10.15
+## 
+## Matrix products: default
+## BLAS:   /System/Library/Frameworks/Accelerate.framework/Versions/A/Frameworks/vecLib.framework/Versions/A/libBLAS.dylib
+## LAPACK: /Library/Frameworks/R.framework/Versions/3.6/Resources/lib/libRlapack.dylib
+## 
+## locale:
+## [1] en_AU.UTF-8/en_AU.UTF-8/en_AU.UTF-8/C/en_AU.UTF-8/en_AU.UTF-8
+## 
+## attached base packages:
+## [1] parallel  stats4    stats     graphics  grDevices utils     datasets 
+## [8] methods   base     
+## 
+## other attached packages:
+##  [1] Biobase_2.44.0       GenomicRanges_1.36.0 GenomeInfoDb_1.20.0 
+##  [4] IRanges_2.18.0       S4Vectors_0.22.1     BiocGenerics_0.30.0 
+##  [7] scMerge_1.0.0        PhosR_0.1.0          directPA_1.4        
+## [10] calibrate_1.7.2      MASS_7.3-51.4        rgl_0.100.19        
+## 
+## loaded via a namespace (and not attached):
+##   [1] colorspace_1.4-1            RcppEigen_0.3.3.5.0        
+##   [3] class_7.3-15                htmlTable_1.13.1           
+##   [5] XVector_0.24.0              base64enc_0.1-3            
+##   [7] rstudioapi_0.10             proxy_0.4-23               
+##   [9] codetools_0.2-16            splines_3.6.0              
+##  [11] knitr_1.23                  Formula_1.2-3              
+##  [13] jsonlite_1.6                cluster_2.0.9              
+##  [15] shiny_1.3.2                 BiocManager_1.30.4         
+##  [17] compiler_3.6.0              backports_1.1.4            
+##  [19] assertthat_0.2.1            Matrix_1.2-17              
+##  [21] lazyeval_0.2.2              limma_3.40.6               
+##  [23] later_0.8.0                 acepack_1.4.1              
+##  [25] htmltools_0.3.6             tools_3.6.0                
+##  [27] rsvd_1.0.1                  gtable_0.3.0               
+##  [29] glue_1.3.1                  GenomeInfoDbData_1.2.1     
+##  [31] dplyr_0.8.1                 Rcpp_1.0.1                 
+##  [33] bbmle_1.0.20                gdata_2.18.0               
+##  [35] nlme_3.1-140                iterators_1.0.10           
+##  [37] crosstalk_1.0.0             xfun_0.7                   
+##  [39] stringr_1.4.0               mime_0.6                   
+##  [41] miniUI_0.1.1.1              irlba_2.3.3                
+##  [43] gtools_3.8.1                statmod_1.4.32             
+##  [45] dendextend_1.12.0           zlibbioc_1.30.0            
+##  [47] scales_1.0.0                pcaMethods_1.76.0          
+##  [49] promises_1.0.1              SummarizedExperiment_1.14.0
+##  [51] RColorBrewer_1.1-2          SingleCellExperiment_1.6.0 
+##  [53] yaml_2.2.0                  gridExtra_2.3              
+##  [55] ggplot2_3.1.1               rpart_4.1-15               
+##  [57] latticeExtra_0.6-28         stringi_1.4.3              
+##  [59] foreach_1.4.4               e1071_1.7-1                
+##  [61] checkmate_1.9.3             caTools_1.17.1.2           
+##  [63] BiocParallel_1.18.0         manipulateWidget_0.10.0    
+##  [65] rlang_0.4.0                 pkgconfig_2.0.2            
+##  [67] matrixStats_0.55.0          bitops_1.0-6               
+##  [69] M3Drop_1.10.0               evaluate_0.13              
+##  [71] lattice_0.20-38             purrr_0.3.2                
+##  [73] ruv_0.9.7                   htmlwidgets_1.3            
+##  [75] tidyselect_0.2.5            plyr_1.8.4                 
+##  [77] magrittr_1.5                R6_2.4.0                   
+##  [79] gplots_3.0.1.1              Hmisc_4.2-0                
+##  [81] DelayedArray_0.10.0         pillar_1.4.1               
+##  [83] foreign_0.8-71              mgcv_1.8-28                
+##  [85] survival_2.44-1.1           RCurl_1.95-4.12            
+##  [87] nnet_7.3-12                 tibble_2.1.2               
+##  [89] crayon_1.3.4                KernSmooth_2.23-15         
+##  [91] rmarkdown_1.13              viridis_0.5.1              
+##  [93] grid_3.6.0                  data.table_1.12.2          
+##  [95] reldist_1.6-6               digest_0.6.19              
+##  [97] webshot_0.5.1               xtable_1.8-4               
+##  [99] httpuv_1.5.1                numDeriv_2016.8-1          
+## [101] munsell_0.5.0               viridisLite_0.3.0</code></pre>
+</div>
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

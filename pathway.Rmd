@@ -1,0 +1,149 @@
+---
+title: "1, 2, 3-dimensional pathway analysis of (phospho)proteomic data"
+author: "Pengyi Yang"
+date: "Dec 2019"
+output:
+  html_document:
+    code_folding: show
+    fig_height: 8
+    fig_width: 8
+    toc: yes
+    number_sections: true
+    toc_depth: 3
+    toc_float: yes
+---
+
+# Introduction
+
+Pathway analysis is an essential component in most of omic science. Here, we will introduce basic methods for "1-dimension" pathway analysis; and more advanced methods for implemented in the R package `directPA` for performing "2 and 3-dimentional" pathway analyses ([Pengyi Yang et al. 2014](https://doi.org/10.1093/bioinformatics/btt616)). We will start with proteomic data and look at gene-centric pathways and then extend to phosphoproteomic data and look at signalling pathways. 
+
+**Load in packages**
+
+```{r load pkg, warning=FALSE, message=FALSE}
+suppressPackageStartupMessages({
+  library(PhosR)
+  library(directPA)
+})
+```
+
+# Gene-centric pathway analysis
+
+## SILAC plasma membrane proteome dataset
+
+We will first use a SILAC-based proteomic dataset for demonstration of gene-centric pathway analysis. It contains the plasma membrane (PM) proteome of insulin responsive 3T3-L1 adipocytes under three different treatment conditions and a basal condition. The three treatment conditions are (1) insulin stimulation; (2) wortmannin inhibition plus insulin stimulation; and (3) MK inhibition plus insulin stimulation. Proteomes in this data meansured by using SILAC-based mass spectrometry. The dataset has already been pre-processed into log2 fold changes of (1) Ins vs Basal; (2) Ins+Wmn vs Basal; and (3) Ins+MK vs Basal.
+
+This dataset is already included in the package `directPA`. We can load this example dataset into current working environment as `data(PM)`.
+
+## Conventional gene pathway analysis (1D)
+
+Let us start with conventional 1-dimensional pathway analysis. The following demonstrates finding pathways that are enriched in insulin stimulation compared to basal. `directPA` package has built in pathway annotations and `PhosR` package implements both over-representation test and rank-based test. The pathway annotations included in `directPA` are from KEGG database and Reactome database. You can always provide your own pathway annotations such as other popular databases (e.g. gene ontology or GO).
+
+```{r, fig.height=5, fig.width=5}
+# load pathway annotations
+data(PM)
+data(Pathways)
+geneSet <- names(sort(PM[,1], decreasing = TRUE))[1:100]
+
+path1 <- pathwayOverrepresent(geneSet, annotation=Pathways.KEGG, universe = rownames(PM), alter = "greater")
+path2 <- pathwayRankBasedEnrichment(PM[,1], annotation=Pathways.KEGG, alter = "greater")
+
+path1[1:5,c("pvalue", "# of substrates")]
+path2[1:5,c("pvalue", "# of substrates")]
+
+plot(-log10(as.numeric(path1[names(Pathways.KEGG),1])), -log10(as.numeric(path2[names(Pathways.KEGG),1])), xlab="Overrepresentation (-log10 pvalue)", ylab="Rank-based enrichment (-log10 pvalue)", main="Comparison of 1D pathway analyses")
+```
+
+
+## 2D gene pathway analysis using directPA
+
+What if we want to find the pathways that are up-regulated in insulin stimulation vs basal but inhibited by wortmannin or MK? Clearly, conventional 1-dimensional pathway analysis can not directly be applied to address this question. That is why we have implemented a 2-dimensional direction pathway analysis method to address this. Below is the demonstration for this.
+
+
+```{r, fig.height=4.5, fig.width=8}
+par(mfrow=c(1,2))
+dpa1 <- directPA(PM[,c(1,2)], direction=pi/2, annotation=Pathways.KEGG, main="Direction pathway analysis")
+dpa2 <- directPA(PM[,c(1,3)], direction=pi/2, annotation=Pathways.KEGG, main="Direction pathway analysis")
+
+dpa1$pathways[1:5,]
+dpa2$pathways[1:5,]
+```
+
+We can obtain the pvalues of genes as how significant they are in the direction we are testing using `dpa1$gene.pvalues`. Below we plot for genes that are active in insulin stimulation and inhibited by either wortmannin or MK. As can be seen, some of the genes are different (i.e. inhibited by wortmannin only or MK only). We can dissect these two conditions and their corresponding pathways using, again, 2D test.
+
+```{r, fig.height=4.5, fig.width=8}
+par(mfrow=c(1,2))
+plot(dpa1$gene.pvalues[rownames(PM)], dpa2$gene.pvalues[rownames(PM)], xlab="Gene pvalue from dpa1", ylab="Gene pvalue from dpa2")
+
+dpa3 <- directPA(PM[,c(2,3)], direction=pi/2, annotation=Pathways.KEGG, main="Direction pathway analysis")
+dpa3$pathways[1:5,]
+```
+
+
+## 3D gene pathway analysis using directPA
+
+The above repeatitve 2D test is good at answering comparisons involving 2 treatments and 1 control. What if we want to ask a question such as "genes that are up-regulated in insulin stimulation; inhibited by MK; but not inhibited by wortmannin"? For this, we need a 3D test which is what we will introduce below.
+
+```{r}
+dPA <- directPA(Tc=PM, direction=c(1,1,-1), annotation=Pathways.KEGG, main="Direction pathway analysis")
+dPA$gst[order(unlist(dPA$gst[,1])),][1:20,]
+```
+
+# Signalling pathways analysis using phosphoproteomic data
+
+The above demonstrated some gene-centric pathway analyses using proteomic data. Now, we will use the same methodology for testing kinase enrichment in phosphoproteomic data.
+
+
+## Embryonic stem cell differentiation phosphoproteomic dataset
+
+In this section, we will use an embryonic stem cell (ESC) differentiation dataset for demonstration. This dataset contains 12 time points profiling the transition of ESCs to epiblast-like cells (EpiLCs). Details regarding the dataset can be found in ([Pengyi Yang et al. 2019](https://doi.org/10.1016/j.cels.2019.03.012)). The quantification of the phophorylation at each time point were converted into log2 fold change with respect to the first time point of 0 hour. 
+
+This dataset is included in the package `PhosR`. We can load this example dataset into current working environment as `data(phosphoESC)`.
+
+## 2D signalling pathway analysis using directPA
+
+One key aspect in studying signalling pathways is to identify key kinases that are involved in signalling cascades. To identify these kinases, we make use of kinase-substrate annotation databases such as PhosphoSitePlus ([Hornbeck et al. 2012](https://dx.doi.org/10.1093/nar/gkr1122)) and Phospho.ELM ([Dinkel et al. 2011](https://dx.doi.org/10.1093/nar/gkq1104)). These databases are included in the `PhosR` and `directPA` packages already. To access them, simply load the package and access the data by `data("PhosphoSitePlus")` and `data("PhosphoELM")`.
+
+Back to the example. Now, suppose we partition the signalling into early (5-15 minutes) and late (24-48h) stages during the differentiation process, we can then identify kinases that are active in these time points by testing kinase-substrates that are up-regulated in phosphorylation level in both time points as below:
+
+```{r, fig.height=4.5, fig.width=8}
+par(mfrow=c(1,2))
+data("phosphoESC")
+data("PhosphoSitePlus")
+rownames(phosphoESC) <- sapply(strsplit(rownames(phosphoESC), ";"), function(x)paste(toupper(x[1]), x[2], "", sep=";"))
+
+kPA1 <- kinasePA(Tc=phosphoESC[,c("X5m","X15m")], direction=0, annotation=PhosphoSite.mouse, main="Direction pathway analysis")
+kPA1$kinase[1:5,]
+kPA2 <- kinasePA(Tc=phosphoESC[,c("X24h","X48h")], direction=0, annotation=PhosphoSite.mouse, main="Direction pathway analysis")
+kPA2$kinase[1:5,]
+```
+
+There is also a function called `perturbPlot2d` for testing and visualising activity of all kinases on all possible directions. Below are the results from using this function. Details of this function and its implementation is described in our publication **kinase perturbation analysis** (**kinasePA**) ([Yang et al. 2016](https://doi.org/10.1002/pmic.201600068)).
+
+```{r}
+z1 <- perturbPlot2d(Tc=phosphoESC[,c("X5m","X15m")], annotation=PhosphoSite.mouse, cex=1, xlim=c(-5, 12), ylim=c(-5, 11), main="Kinase perturbation analysis")
+z2 <- perturbPlot2d(Tc=phosphoESC[,c("X24h","X48h")], annotation=PhosphoSite.mouse, cex=1, xlim=c(-5, 11), ylim=c(-5, 11), main="Kinase perturbation analysis")
+```
+
+# Gene-centric pathway analysis of phosphoproteomic data
+
+While the above kinase-substrate-based analysis of phosphoproteomic data is informative, the annotation of kinases and their substrates in current databases are quite limited. This leads to the limited use of a small subset of phosphosites whereas the majority of the identified phosphosites in the phosphoproteomic data are not used for the analysis.
+
+One possible way to utilise more from the phosphoproteomic data is to perform gene-centric analysis by summarising phosphosite-level information to each protein. The following is an example for such type of analysis using the `phosCollapse` function in package `PhosR` and then `directPA` for gene-centric 2D pathway analysis.
+
+```{r, fig.height=4.5, fig.width=8}
+# summarise phospho-level information to genes
+phosphoESC.sum <- phosCollapse(phosphoESC, gsub(";.+", "", rownames(phosphoESC)), stat = apply(abs(phosphoESC), 1, max), by = "max")
+
+par(mfrow=c(1,2))
+dPA1 <- directPA(Tc=phosphoESC.sum[,c("X5m","X15m")], direction=0, annotation=Pathways.reactome, main="Direction pathway analysis")
+dPA1$pathways[1:5,]
+dPA2 <- directPA(Tc=phosphoESC.sum[,c("X24h","X48h")], direction=0, annotation=Pathways.reactome, main="Direction pathway analysis")
+dPA2$pathways[1:5,]
+```
+
+
+# Session Info
+```{r}
+sessionInfo()
+```
+

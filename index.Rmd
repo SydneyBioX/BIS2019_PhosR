@@ -1,0 +1,66 @@
+---
+title: "BioInfoSummer 2019"
+subtitle: "Phosphoproteomics data analysis workshop"
+author: "Pengyi Yang (Computational Systems Biology)"
+date: "Dec 2019"
+output: html_document
+---
+
+# Aim of this workshop
+
+In this workshop we will focus on two published phosphoproteomics datasets to illustrate some key components in PhosR package, including:
+
+  1. Phosphoproteomic data preprocessing (normalisation, imputation, and quality control),
+  1. Knowledge-based kinase perturbation analysis (using direction analysis), 
+  1. Kinase substrate predictions (using positive unlabelled learning).
+
+At the end of this workshop you should have the basic understanding of some key steps in phosphoproteomics data analysis and some key computational and statistical methods that could be applied in each step.
+
+
+# Prerequisites
+
+Ideally, you should be somewhat familiar with `R`. If you haven't used `R` before, you can still pick up key elements in phosphoproteomics data analysis by running the codes I provided. 
+
+Please try to download and install:
+
+  + `R 3.6` from https://cloud.r-project.org/ 
+  + `RStudio` from https://www.rstudio.com/products/rstudio/download/
+
+
+# Installation 
+
+You can find all the data and materials [here](https://github.com/PengyiYang/PhosR). 
+
+You should be able to run the codes below in `R` to install all the packages needed in this workshop. If you encounter any problems. Please let one of the instructors know. 
+
+```{r install, eval = FALSE}
+devtools::install_github("PengyiYang/PhosR")
+```
+
+
+# Clipboard
+
+In some circumstances, we might need to share codes that are not currently a part of the existing materials. Please click [here](https://docs.google.com/document/d/136YffzxjkUM8RIGsnjD_yOkCTWw4Ijdwjy4_58nC-zc/edit?usp=sharing) to access these codes. 
+
+
+# References
+
+**Methodologies**
+
+1. [Knowledge-Based Analysis for Detecting Key Signaling Events from Time-Series Phosphoproteomics Data](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1004403), Pengyi Yang et al. PLoS Computational Biology, 2015.
+
+1. [KinasePA: Phosphoproteomics data annotation using hypothesis driven kinase perturbation analysis](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5027648/) Pengyi Yang et al. Proteomics, 2016
+
+1. [Positive-unlabeled ensemble learning for kinase substrate prediction from dynamic phosphoproteomics data](https://academic.oup.com/bioinformatics/article/32/2/252/1743815), Pengyi Yang et al. Bioinformatics, 2016
+
+
+**Data**
+
+1. [Multi-omic Profiling Reveals Dynamics of the Phased Progression of Pluripotency](https://doi.org/10.1016/j.cels.2019.03.012), Pengyi Yang et al. Cell Systems, 2019.
+
+
+
+```{r}
+sessionInfo()
+```
+

@@ -1,0 +1,18 @@
+# This file controls the layout of the website. 
+name: "PhosR"
+navbar:
+  title: "PhosR - BioInfoSummer Workshop"
+  left:
+    - text: "Home"
+      href: index.html
+    - text: "QC & pre-processing"
+      href: qc.html
+    - text: "Pathway analysis"
+      href: pathway.html
+    - text: "Time-course analysis"
+      href: timecourse.html
+output_dir: "."
+output:
+  html_document:
+    theme: paper
+    highlight: textmate

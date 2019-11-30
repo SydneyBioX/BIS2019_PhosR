@@ -1,0 +1,78 @@
+---
+title: "Analysing time-course (phospho)proteomic data"
+author: "Pengyi Yang"
+date: "Dec 2019"
+output:
+  html_document:
+    code_folding: show
+    fig_height: 8
+    fig_width: 8
+    toc: yes
+    number_sections: true
+    toc_depth: 3
+    toc_float: yes
+---
+
+# Introduction
+
+While 1, 2, and 3D pathway analyses are useful for data generated from experiments with different treatment/conditions, analysis designed for time-course data may be better suited to analysis experiments that profile multiple time points such as in the ESC differentiation experiment.
+
+Here, we will introduce `ClueR` which is an R package specifically designed for time-course proteomic and phosphoproteomic data analysis ([Pengyi Yang et al. 2015])(https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1004403).
+
+Let us start with gene-centric analysis. Such analysis can be directly applied to proteomics data. It can also be applied to phosphoproteomic data by using the `phosCollapse` function to summarise phosphosite information to the gene level.
+
+```{r}
+suppressPackageStartupMessages({
+  library(PhosR)
+  library(ClueR)
+  library(ggplot2)
+  library(parallel)
+})
+```
+
+```{r}
+# load example data
+data("phosphoESC")
+
+# summarise phosphosite information to the gene level
+phosphoESC.sum <- phosCollapse(phosphoESC, gsub(";.+", "", rownames(phosphoESC)), stat = apply(abs(phosphoESC), 1, max), by = "max")
+rownames(phosphoESC.sum) <- toupper(rownames(phosphoESC.sum))
+```
+
+```{r, eval = FALSE}
+# NOT RUN. to save the time the following block is not run.
+# perform ClueR to identify optimal number of clusters.
+RNGkind("L'Ecuyer-CMRG")
+set.seed(123)
+c1 <- runClue(phosphoESC.sum, annotation=Pathways.reactome, kRange = 2:30, rep = 5, effectiveSize = c(5, 100), pvalueCutoff = 0.05, alpha = 0.5)
+```
+
+Visualise the evaluation results
+
+```{r}
+load("phosphoESC_cluster.RData")
+
+data <- data.frame(Success=as.numeric(c1$evlMat), Freq=rep(2:30, each=5))
+myplot <- ggplot(data, aes(x=Freq, y=Success)) + geom_boxplot(aes(x = factor(Freq), fill="gray"))+
+  stat_smooth(method="loess", colour="red", size=3, span = 0.5) + xlab("# of cluster")+ ylab("Enrichment score")+theme_classic()
+myplot
+```
+
+Finding enriched pathways from each cluster.
+
+```{r, fig.height=10, fig.width=10}
+set.seed(123)
+best <- clustOptimal(c1, rep=5, mfrow=c(4, 4), visualize = TRUE)
+best$enrichList
+```
+
+
+
+# Session Info
+```{r}
+sessionInfo()
+```
+
+
+
+

@@ -1,0 +1,148 @@
+---
+title: "Preprocessing (phospho)proteomics data"
+author: "Pengyi Yang"
+date: "Dec 2019"
+output:
+  html_document:
+    code_folding: show
+    fig_height: 10
+    fig_width: 10
+    toc: yes
+    number_sections: true
+    toc_depth: 3
+    toc_float: yes
+---
+
+# Introduction
+
+Before we can start interpreting biology from our phoshoproteomic data, the first step is to perform data preprocessing and QC. These include (but not limited to) assessing data quality, filtering, imputing missing values where appropriate, and normalising data to remove batch effects. PhosR package implements various functions for achieving these goals. Here, we will introduce a few QC measures and demonstrate some of the key functions for data normalisation and imputation.
+
+# Analysis on ESC differentiation dataset
+
+The ESC differentiation dataset contains the temporal phosphoproteome profile during mouse embryonic stem cell (ESC) differentiation to epiblast-like cells (EpiLC) ([Pengyi Yang et al. 2019](https://doi.org/10.1016/j.cels.2019.03.012)), using `label free` approach. There are 12 profiled time points including 0h (ESC), 5min, 15min, 30min, 1h, 3h, 6h, 12h, 24h, 36h, 48h, and 72h (EpiLC). The dataset in plain text file `ESC_Phospho (STY)Sites.txt` is avaliable from (xxx). This file contains essentailly the orignal output from MaxQuant (https://www.maxquant.org/) which is a software for quantifying mass spectrometry machine outputs. We will start by loading PhosR package for subsequent analysis.
+
+```{r load qc pkg, warning=FALSE, message=FALSE}
+library(PhosR)
+```
+
+## Data wrangling 
+
+We can load the data into R using the `read.delim()` function. Note that the first row contains header information.
+
+```{r}
+phospho.raw <- read.delim("/Users/pengyiyang/Dropbox (Sydney Uni)/SMoS/Teaching & Supervision/BioInfoSummer 19/ESC_Phospho (STY)Sites.txt", header = TRUE)
+```
+
+After reading in the text file, we will extract some useful column information and concatenate them into strings as use them as id for each of our phosphosite in the dataset.
+
+```{r}
+Ids <- paste(paste(sapply(strsplit(as.character(phospho.raw[,"Protein"]), ";"), function(x){x[1]}),
+             sapply(strsplit(as.character(phospho.raw[,"Gene.names"]), ";"), function(x){x[1]}),
+             paste(as.character(phospho.raw[,"Amino.acid"]), as.character(phospho.raw[,"Position"]), sep=""),
+             sapply(strsplit(as.character(phospho.raw[,"Sequence.window"]), ";"), function(x){x[1]}), sep="~"))
+
+Ids[1:10]
+
+rownames(phospho.raw) <- Ids
+```
+
+Before we going forward, the first thing to do is to remove `Reverse` and `Potential.contaminant` entries. These are entires that are reported by MaxQuant. They are either false positive identifications (in case of `Reverse`) or real identification contaminated proteins other than those extracted from cells of interests. 
+
+```{r}
+del <- which(phospho.raw[,"Reverse"] == "+" | phospho.raw[,"Potential.contaminant"] == "+")
+phospho.clean <- phospho.raw[-del,]
+```
+
+Next, we will select columns that correspond to phosphosite quantification. These columns normally start with the key word `Intensity` and follow with sample-specific information. After selecting extracting the raw data from these columns we will transform the data using log2 and mark the missing values as `NA`
+
+```{r}
+selected.cols <- grep("^Intensity.+_\\d", colnames(phospho.clean))
+phospho.exp.full <- log2(as.matrix(phospho.clean[,selected.cols]))
+phospho.exp.full[is.infinite(phospho.exp.full)] <- NA
+```
+
+We will also remove the time points after 6 hours for this analysis. Do you know why?
+
+```{r}
+phospho.exp <- phospho.exp.full[,c(1:4, 37:40, 9:12, 21:24, 13:16, 29:32, 41:44)]
+```
+
+Now, we have the quantification of all phosphosites in this experiment saved in `phospho.exp.raw`. Let us start with some basic QC.
+
+```{r}
+dim(phospho.exp)
+
+# color code by replicates at each time point
+grps <- gsub("_\\d", "", colnames(phospho.exp))
+cs <- rainbow(length(unique(grps)))
+colorCodes <- sapply(grps, switch, Intensity.0m=cs[1], Intensity.5m=cs[2],
+                 Intensity.15m=cs[3], Intensity.30m=cs[4], Intensity.1h=cs[5], Intensity.3h=cs[6], Intensity.6h=cs[7])
+
+par(mfrow=c(2,1))
+plotQC(phospho.exp, panel = 1, cols = colorCodes)
+plotQC(phospho.exp, panel = 2, cols = colorCodes)
+```
+
+
+Notice that we have plotted the percentage of missing values and performed a hierarchical clustering using the `plotQC` function which is part of the `PhosR` package. 
+
+
+## Filtering of phophosites
+
+Given the high percentage of missing values (>50%), we will start by performing some filtering to remove phosphosites that are unquantified in majority of the samples. We introduce two filtering functions implemented in `PhosR`. They are `selectGrps` and `selectOverallPercent`. The `selectGrps` function select phosphosites by requring the percentage of quantified values in a treatment group to be equal or higher than a given value [0-1], and the number of treatment groups that meet this cutoff. For example, the following code filter to select phosphosites that have 75% (3 out of 4 replicates in case of ESC dataset) quantified in at least 3 time point.
+
+```{r}
+phospho.exp.filtered1 <- selectGrps(phospho.exp, grps = grps, percent = 0.75, n = 3)
+```
+
+The second function `selectOverallPercent` allows the selection of phosphosites that have be quantified in at least a given percentage of all samples. For example, the following select sites that have been quantified in 30% of all samples.
+
+```{r}
+# filter to select phosphosites that have be quantified in at least 30% of all samples
+phospho.exp.filtered2 <- selectOverallPercent(phospho.exp.filtered1, percent = 0.3)
+dim(phospho.exp.filtered2)
+
+par(mfrow=c(2,1))
+plotQC(phospho.exp.filtered2, panel = 1, cols = colorCodes)
+plotQC(phospho.exp.filtered2, panel = 2, cols = colorCodes)
+```
+
+
+## Imputation
+
+Now we have filtered the phosphosites that have large number of missing values, we will perform imputation to the remaining phosphosites so that subsequent analyses that require full matrix could be conducted properly. Before we perform imputation, we use the following code to perform a median-based centring of data in each treatment/time point.
+
+```{r}
+# centring data across their median
+phospho.exp.scaled <- medianScaling(phospho.exp.filtered2, scale = FALSE)
+boxplot(phospho.exp.scaled, col=colorCodes, las=2)
+```
+
+We will use the following two steps for data imputation:
+
+  + First impute data by time points for each phosphosite. For each time point, we will impute the missing value if 50% (2 out of 4) replicates are quantified.
+  + Second impute the rest of the missing values using lower-tail imputation (`tImpute`)
+  
+```{r}
+set.seed(1)
+# step 1
+phospho.exp.imputed1 <- ssImpute(phospho.exp.scaled, percent = 0.5, grps = grps)
+# step 2
+phospho.exp.imputed <- tImpute(phospho.exp.imputed1)
+# finally, convert the data into ratios with respect to the first time point (0h)
+phospho.exp.ratio <- phospho.exp.imputed - rowMeans(phospho.exp.imputed[,1:4])
+plotQC(phospho.exp.ratio, col=colorCodes)
+```
+
+<h4> <span class="glyphicon glyphicon-education" aria-hidden="true"></span> Quick quiz </h4>
+
+1. How many phosphosites do we have now?
+1. Did we lose any time points (columns)?
+
+
+
+# Session Info
+```{r}
+sessionInfo()
+```
+

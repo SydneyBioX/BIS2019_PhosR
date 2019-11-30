@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Pengyi Yang" />
+
+
+<title>Analysing time-course (phospho)proteomic data</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/paper.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<script src="site_libs/navigation-1.1/codefolding.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 64px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 69px;
+  margin-top: -69px;
+}
+.section h2 {
+  padding-top: 69px;
+  margin-top: -69px;
+}
+.section h3 {
+  padding-top: 69px;
+  margin-top: -69px;
+}
+.section h4 {
+  padding-top: 69px;
+  margin-top: -69px;
+}
+.section h5 {
+  padding-top: 69px;
+  margin-top: -69px;
+}
+.section h6 {
+  padding-top: 69px;
+  margin-top: -69px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
+<script>
+$(document).ready(function () {
+  window.initializeCodeFolding("show" === "show");
+});
+</script>
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">PhosR - BioInfoSummer Workshop</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="qc.html">QC &amp; pre-processing</a>
+</li>
+<li>
+  <a href="pathway.html">Pathway analysis</a>
+</li>
+<li>
+  <a href="timecourse.html">Time-course analysis</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+<div class="btn-group pull-right">
+<button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+</ul>
+</div>
+
+
+
+<h1 class="title toc-ignore">Analysing time-course (phospho)proteomic data</h1>
+<h4 class="author">Pengyi Yang</h4>
+<h4 class="date">Dec 2019</h4>
+
+</div>
+
+
+<div id="introduction" class="section level1">
+<h1><span class="header-section-number">1</span> Introduction</h1>
+<p>While 1, 2, and 3D pathway analyses are useful for data generated from experiments with different treatment/conditions, analysis designed for time-course data may be better suited to analysis experiments that profile multiple time points such as in the ESC differentiation experiment.</p>
+<p>Here, we will introduce <code>ClueR</code> which is an R package specifically designed for time-course proteomic and phosphoproteomic data analysis ([Pengyi Yang et al. 2015])(<a href="https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1004403" class="uri">https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1004403</a>).</p>
+<p>Let us start with gene-centric analysis. Such analysis can be directly applied to proteomics data. It can also be applied to phosphoproteomic data by using the <code>phosCollapse</code> function to summarise phosphosite information to the gene level.</p>
+<pre class="r"><code>suppressPackageStartupMessages({
+  library(PhosR)
+  library(ClueR)
+  library(ggplot2)
+  library(parallel)
+})</code></pre>
+<pre class="r"><code># load example data
+data(&quot;phosphoESC&quot;)
+
+# summarise phosphosite information to the gene level
+phosphoESC.sum &lt;- phosCollapse(phosphoESC, gsub(&quot;;.+&quot;, &quot;&quot;, rownames(phosphoESC)), stat = apply(abs(phosphoESC), 1, max), by = &quot;max&quot;)
+rownames(phosphoESC.sum) &lt;- toupper(rownames(phosphoESC.sum))</code></pre>
+<pre class="r"><code># NOT RUN. to save the time the following block is not run.
+# perform ClueR to identify optimal number of clusters.
+RNGkind(&quot;L&#39;Ecuyer-CMRG&quot;)
+set.seed(123)
+c1 &lt;- runClue(phosphoESC.sum, annotation=Pathways.reactome, kRange = 2:30, rep = 5, effectiveSize = c(5, 100), pvalueCutoff = 0.05, alpha = 0.5)</code></pre>
+<p>Visualise the evaluation results</p>
+<pre class="r"><code>load(&quot;phosphoESC_cluster.RData&quot;)
+
+data &lt;- data.frame(Success=as.numeric(c1$evlMat), Freq=rep(2:30, each=5))
+myplot &lt;- ggplot(data, aes(x=Freq, y=Success)) + geom_boxplot(aes(x = factor(Freq), fill=&quot;gray&quot;))+
+  stat_smooth(method=&quot;loess&quot;, colour=&quot;red&quot;, size=3, span = 0.5) + xlab(&quot;# of cluster&quot;)+ ylab(&quot;Enrichment score&quot;)+theme_classic()
+myplot</code></pre>
+<p><img src="timecourse_files/figure-html/unnamed-chunk-4-1.png" width="768" /></p>
+<p>Finding enriched pathways from each cluster.</p>
+<pre class="r"><code>set.seed(123)
+best &lt;- clustOptimal(c1, rep=5, mfrow=c(4, 4), visualize = TRUE)
+best$enrichList</code></pre>
+<pre><code>## $`cluster 1`
+##      kinase                                                                                                          
+## [1,] &quot;REACTOME_3_UTR_MEDIATED_TRANSLATIONAL_REGULATION&quot;                                                              
+## [2,] &quot;REACTOME_ACTIVATION_OF_THE_MRNA_UPON_BINDING_OF_THE_CAP_BINDING_COMPLEX_AND_EIFS_AND_SUBSEQUENT_BINDING_TO_43S&quot;
+## [3,] &quot;REACTOME_TRANSLATION&quot;                                                                                          
+## [4,] &quot;REACTOME_FACTORS_INVOLVED_IN_MEGAKARYOCYTE_DEVELOPMENT_AND_PLATELET_PRODUCTION&quot;                                
+## [5,] &quot;REACTOME_RNA_POL_I_RNA_POL_III_AND_MITOCHONDRIAL_TRANSCRIPTION&quot;                                                
+## [6,] &quot;REACTOME_REGULATION_OF_MRNA_STABILITY_BY_PROTEINS_THAT_BIND_AU_RICH_ELEMENTS&quot;                                  
+##      pvalue                size
+## [1,] &quot;0.00718521874816707&quot; &quot;7&quot; 
+## [2,] &quot;0.0106329485150802&quot;  &quot;5&quot; 
+## [3,] &quot;0.0112516342829819&quot;  &quot;8&quot; 
+## [4,] &quot;0.0193913125843314&quot;  &quot;7&quot; 
+## [5,] &quot;0.0223382946379903&quot;  &quot;5&quot; 
+## [6,] &quot;0.0402422110563673&quot;  &quot;5&quot; 
+##      substrates                                         
+## [1,] &quot;EIF2S2|EIF3B|EIF3D|EIF4G1|RPL13|RPL15|RPS17&quot;      
+## [2,] &quot;EIF2S2|EIF3B|EIF3D|EIF4G1|RPS17&quot;                  
+## [3,] &quot;EIF2S2|EIF3B|EIF3D|EIF4G1|RPL13|RPL15|RPS17|SRP72&quot;
+## [4,] &quot;CBX5|H3F3A|HIST1H3A|KIF18A|KIF22|KIF5B|RACGAP1&quot;   
+## [5,] &quot;H3F3A|HIST1H3A|MNAT1|POU2F1|SNAPC4&quot;               
+## [6,] &quot;DCP1A|EIF4G1|PARN|PSMA3|XRN1&quot;                     
+## 
+## $`cluster 2`
+##       kinase                                                                                           
+##  [1,] &quot;REACTOME_MAPK_TARGETS_NUCLEAR_EVENTS_MEDIATED_BY_MAP_KINASES&quot;                                   
+##  [2,] &quot;REACTOME_RECYCLING_PATHWAY_OF_L1&quot;                                                               
+##  [3,] &quot;REACTOME_NUCLEAR_EVENTS_KINASE_AND_TRANSCRIPTION_FACTOR_ACTIVATION&quot;                             
+##  [4,] &quot;REACTOME_ACTIVATION_OF_NMDA_RECEPTOR_UPON_GLUTAMATE_BINDING_AND_POSTSYNAPTIC_EVENTS&quot;            
+##  [5,] &quot;REACTOME_CREB_PHOSPHORYLATION_THROUGH_THE_ACTIVATION_OF_RAS&quot;                                    
+##  [6,] &quot;REACTOME_POST_NMDA_RECEPTOR_ACTIVATION_EVENTS&quot;                                                  
+##  [7,] &quot;REACTOME_NGF_SIGNALLING_VIA_TRKA_FROM_THE_PLASMA_MEMBRANE&quot;                                      
+##  [8,] &quot;REACTOME_TRAF6_MEDIATED_INDUCTION_OF_NFKB_AND_MAP_KINASES_UPON_TLR7_8_OR_9_ACTIVATION&quot;          
+##  [9,] &quot;REACTOME_MYD88_MAL_CASCADE_INITIATED_ON_PLASMA_MEMBRANE&quot;                                        
+## [10,] &quot;REACTOME_ACTIVATED_TLR4_SIGNALLING&quot;                                                             
+## [11,] &quot;REACTOME_MAP_KINASE_ACTIVATION_IN_TLR_CASCADE&quot;                                                  
+## [12,] &quot;REACTOME_TOLL_RECEPTOR_CASCADES&quot;                                                                
+## [13,] &quot;REACTOME_L1CAM_INTERACTIONS&quot;                                                                    
+## [14,] &quot;REACTOME_INTEGRATION_OF_ENERGY_METABOLISM&quot;                                                      
+## [15,] &quot;REACTOME_SIGNALLING_BY_NGF&quot;                                                                     
+## [16,] &quot;REACTOME_TRANSMISSION_ACROSS_CHEMICAL_SYNAPSES&quot;                                                 
+## [17,] &quot;REACTOME_NFKB_AND_MAP_KINASES_ACTIVATION_MEDIATED_BY_TLR4_SIGNALING_REPERTOIRE&quot;                 
+## [18,] &quot;REACTOME_TRANSMEMBRANE_TRANSPORT_OF_SMALL_MOLECULES&quot;                                            
+## [19,] &quot;REACTOME_NEUROTRANSMITTER_RECEPTOR_BINDING_AND_DOWNSTREAM_TRANSMISSION_IN_THE_POSTSYNAPTIC_CELL&quot;
+## [20,] &quot;REACTOME_SEMAPHORIN_INTERACTIONS&quot;                                                               
+## [21,] &quot;REACTOME_IMMUNE_SYSTEM&quot;                                                                         
+## [22,] &quot;REACTOME_AXON_GUIDANCE&quot;                                                                         
+## [23,] &quot;REACTOME_TRIF_MEDIATED_TLR3_SIGNALING&quot;                                                          
+## [24,] &quot;REACTOME_NEURONAL_SYSTEM&quot;                                                                       
+## [25,] &quot;REACTOME_INNATE_IMMUNE_SYSTEM&quot;                                                                  
+## [26,] &quot;REACTOME_SLC_MEDIATED_TRANSMEMBRANE_TRANSPORT&quot;                                                  
+##       pvalue                 size
+##  [1,] &quot;0.000418707002507505&quot; &quot;6&quot; 
+##  [2,] &quot;0.000453826961077179&quot; &quot;5&quot; 
+##  [3,] &quot;0.000843410289414608&quot; &quot;5&quot; 
+##  [4,] &quot;0.0014370374202571&quot;   &quot;5&quot; 
+##  [5,] &quot;0.0014370374202571&quot;   &quot;5&quot; 
+##  [6,] &quot;0.0014370374202571&quot;   &quot;5&quot; 
+##  [7,] &quot;0.00364954632797451&quot;  &quot;10&quot;
+##  [8,] &quot;0.00428244102661531&quot;  &quot;7&quot; 
+##  [9,] &quot;0.00428244102661531&quot;  &quot;7&quot; 
+## [10,] &quot;0.00680158738495657&quot;  &quot;7&quot; 
+## [11,] &quot;0.00728398500903662&quot;  &quot;6&quot; 
+## [12,] &quot;0.00841017739648185&quot;  &quot;7&quot; 
+## [13,] &quot;0.0116855961801612&quot;   &quot;6&quot; 
+## [14,] &quot;0.0124458974944547&quot;   &quot;5&quot; 
+## [15,] &quot;0.0126790639715247&quot;   &quot;13&quot;
+## [16,] &quot;0.0144721519888299&quot;   &quot;6&quot; 
+## [17,] &quot;0.0176899554505819&quot;   &quot;6&quot; 
+## [18,] &quot;0.0183139406318581&quot;   &quot;10&quot;
+## [19,] &quot;0.020252374963489&quot;    &quot;5&quot; 
+## [20,] &quot;0.020252374963489&quot;    &quot;5&quot; 
+## [21,] &quot;0.0229006753964246&quot;   &quot;25&quot;
+## [22,] &quot;0.0252210223159104&quot;   &quot;11&quot;
+## [23,] &quot;0.0255284561758479&quot;   &quot;6&quot; 
+## [24,] &quot;0.0255284561758479&quot;   &quot;6&quot; 
+## [25,] &quot;0.0293881968700962&quot;   &quot;8&quot; 
+## [26,] &quot;0.0424594156813736&quot;   &quot;7&quot; 
+##       substrates                                                                                                                                                      
+##  [1,] &quot;ATF1|DUSP6|JUN|MAPK1|RPS6KA1|RPS6KA3&quot;                                                                                                                          
+##  [2,] &quot;MAPK1|NUMB|RPS6KA1|RPS6KA3|RPS6KA6&quot;                                                                                                                            
+##  [3,] &quot;ATF1|DUSP6|MAPK1|RPS6KA1|RPS6KA3&quot;                                                                                                                              
+##  [4,] &quot;CAMK2B|MAPK1|RPS6KA1|RPS6KA3|RPS6KA6&quot;                                                                                                                          
+##  [5,] &quot;CAMK2B|MAPK1|RPS6KA1|RPS6KA3|RPS6KA6&quot;                                                                                                                          
+##  [6,] &quot;CAMK2B|MAPK1|RPS6KA1|RPS6KA3|RPS6KA6&quot;                                                                                                                          
+##  [7,] &quot;ADRBK1|ATF1|DUSP6|IRS2|MAPK1|PRKAR1A|RAPGEF1|RPS6KA1|RPS6KA3|RPS6KB2&quot;                                                                                          
+##  [8,] &quot;ATF1|DUSP6|JUN|MAP3K1|MAPK1|RPS6KA1|RPS6KA3&quot;                                                                                                                   
+##  [9,] &quot;ATF1|DUSP6|JUN|MAP3K1|MAPK1|RPS6KA1|RPS6KA3&quot;                                                                                                                   
+## [10,] &quot;ATF1|DUSP6|JUN|MAP3K1|MAPK1|RPS6KA1|RPS6KA3&quot;                                                                                                                   
+## [11,] &quot;ATF1|DUSP6|JUN|MAPK1|RPS6KA1|RPS6KA3&quot;                                                                                                                          
+## [12,] &quot;ATF1|DUSP6|JUN|MAP3K1|MAPK1|RPS6KA1|RPS6KA3&quot;                                                                                                                   
+## [13,] &quot;MAPK1|NUMB|RANBP9|RPS6KA1|RPS6KA3|RPS6KA6&quot;                                                                                                                     
+## [14,] &quot;ACACA|CACNA1A|MARCKS|MLX|PRKAR1A&quot;                                                                                                                              
+## [15,] &quot;ADRBK1|ARHGEF12|ARHGEF18|ATF1|DUSP6|IRS2|ITGB3BP|MAPK1|PRKAR1A|RAPGEF1|RPS6KA1|RPS6KA3|RPS6KB2&quot;                                                                
+## [16,] &quot;CACNA1A|CAMK2B|MAPK1|RPS6KA1|RPS6KA3|RPS6KA6&quot;                                                                                                                  
+## [17,] &quot;ATF1|DUSP6|JUN|MAPK1|RPS6KA1|RPS6KA3&quot;                                                                                                                          
+## [18,] &quot;ATP11C|ATP7A|NUP153|NUP188|PRKAR1A|SLC12A6|SLC26A2|SLC39A6|SLC7A3|TPR&quot;                                                                                         
+## [19,] &quot;CAMK2B|MAPK1|RPS6KA1|RPS6KA3|RPS6KA6&quot;                                                                                                                          
+## [20,] &quot;ARHGAP35|ARHGEF12|LIMK2|MYL12B|PIP5K1C&quot;                                                                                                                        
+## [21,] &quot;ATF1|CAMK2B|CDC27|DUSP6|DYNC2LI1|IRS2|JUN|KIF15|KLC2|MAP3K1|MAP3K3|MAPK1|MAVS|NUP153|NUP188|PSMC3|RAPGEF1|RNF138|RNF34|RPS6KA1|RPS6KA3|RPS6KB2|SAE1|TPR|TRIP12&quot;
+## [22,] &quot;ARHGAP35|ARHGEF12|LIMK2|MAPK1|MYL12B|NUMB|PIP5K1C|RANBP9|RPS6KA1|RPS6KA3|RPS6KA6&quot;                                                                              
+## [23,] &quot;ATF1|DUSP6|JUN|MAPK1|RPS6KA1|RPS6KA3&quot;                                                                                                                          
+## [24,] &quot;CACNA1A|CAMK2B|MAPK1|RPS6KA1|RPS6KA3|RPS6KA6&quot;                                                                                                                  
+## [25,] &quot;ATF1|DUSP6|JUN|MAP3K1|MAPK1|MAVS|RPS6KA1|RPS6KA3&quot;                                                                                                              
+## [26,] &quot;NUP153|NUP188|SLC12A6|SLC26A2|SLC39A6|SLC7A3|TPR&quot;                                                                                                              
+## 
+## $`cluster 3`
+##      kinase                       pvalue                 size
+## [1,] &quot;REACTOME_NETRIN1_SIGNALING&quot; &quot;9.53771396405697e-05&quot; &quot;5&quot; 
+##      substrates                   
+## [1,] &quot;DOCK1|NEO1|PLCG1|PTK2|UNC5B&quot;
+## 
+## $`cluster 4`
+##      kinase                                                             
+## [1,] &quot;REACTOME_SIGNALING_BY_THE_B_CELL_RECEPTOR_BCR&quot;                    
+## [2,] &quot;REACTOME_LOSS_OF_NLP_FROM_MITOTIC_CENTROSOMES&quot;                    
+## [3,] &quot;REACTOME_RECRUITMENT_OF_MITOTIC_CENTROSOME_PROTEINS_AND_COMPLEXES&quot;
+## [4,] &quot;REACTOME_TOLL_RECEPTOR_CASCADES&quot;                                  
+## [5,] &quot;REACTOME_IMMUNE_SYSTEM&quot;                                           
+## [6,] &quot;REACTOME_GENERIC_TRANSCRIPTION_PATHWAY&quot;                           
+## [7,] &quot;REACTOME_ADAPTIVE_IMMUNE_SYSTEM&quot;                                  
+##      pvalue               size
+## [1,] &quot;0.0148221988665099&quot; &quot;7&quot; 
+## [2,] &quot;0.0369289022472585&quot; &quot;5&quot; 
+## [3,] &quot;0.0424792762332393&quot; &quot;5&quot; 
+## [4,] &quot;0.0424792762332393&quot; &quot;5&quot; 
+## [5,] &quot;0.0432253013383923&quot; &quot;20&quot;
+## [6,] &quot;0.0465811379537731&quot; &quot;6&quot; 
+## [7,] &quot;0.0477012304591939&quot; &quot;13&quot;
+##      substrates                                                                                                                    
+## [1,] &quot;CBLB|FOXO4|MAP3K7|MAPKAP1|PDPK1|SH3KBP1|STIM1&quot;                                                                               
+## [2,] &quot;AKAP9|CEP164|OFD1|PCM1|TUBA4A&quot;                                                                                               
+## [3,] &quot;AKAP9|CEP164|OFD1|PCM1|TUBA4A&quot;                                                                                               
+## [4,] &quot;ATF2|MAP3K7|PIK3R4|RIPK1|TAB3&quot;                                                                                               
+## [5,] &quot;ATF2|CAPZA2|CBLB|EIF4G2|FOXO4|HERC2|MAP3K7|MAPKAP1|NUP155|PDPK1|PIK3R4|PJA1|PVRL2|RIPK1|SEC24B|SH3KBP1|STIM1|TAB3|TCEB2|VASP&quot;
+## [6,] &quot;CDK9|E2F4|MED26|NCOA3|TRIM33|ZNF496&quot;                                                                                         
+## [7,] &quot;CBLB|FOXO4|HERC2|MAP3K7|MAPKAP1|PDPK1|PJA1|PVRL2|SEC24B|SH3KBP1|STIM1|TCEB2|VASP&quot;                                            
+## 
+## $`cluster 6`
+##      kinase                                                        
+## [1,] &quot;REACTOME_ACTIVATION_OF_ATR_IN_RESPONSE_TO_REPLICATION_STRESS&quot;
+## [2,] &quot;REACTOME_G2_M_CHECKPOINTS&quot;                                   
+##      pvalue               size substrates                   
+## [1,] &quot;0.0120495906373364&quot; &quot;5&quot;  &quot;CDC25A|CDC7|CHEK1|MCM3|MCM4&quot;
+## [2,] &quot;0.0321993876573818&quot; &quot;5&quot;  &quot;CDC25A|CDC7|CHEK1|MCM3|MCM4&quot;
+## 
+## $`cluster 7`
+##       kinase                                                                  
+##  [1,] &quot;REACTOME_METABOLISM_OF_PROTEINS&quot;                                       
+##  [2,] &quot;REACTOME_INFLUENZA_VIRAL_RNA_TRANSCRIPTION_AND_REPLICATION&quot;            
+##  [3,] &quot;REACTOME_NONSENSE_MEDIATED_DECAY_ENHANCED_BY_THE_EXON_JUNCTION_COMPLEX&quot;
+##  [4,] &quot;REACTOME_PEPTIDE_CHAIN_ELONGATION&quot;                                     
+##  [5,] &quot;REACTOME_3_UTR_MEDIATED_TRANSLATIONAL_REGULATION&quot;                      
+##  [6,] &quot;REACTOME_SRP_DEPENDENT_COTRANSLATIONAL_PROTEIN_TARGETING_TO_MEMBRANE&quot;  
+##  [7,] &quot;REACTOME_METABOLISM_OF_MRNA&quot;                                           
+##  [8,] &quot;REACTOME_INFLUENZA_LIFE_CYCLE&quot;                                         
+##  [9,] &quot;REACTOME_TRANSLATION&quot;                                                  
+##       pvalue                size
+##  [1,] &quot;0.00220164862214581&quot; &quot;13&quot;
+##  [2,] &quot;0.00288188132804293&quot; &quot;7&quot; 
+##  [3,] &quot;0.00389620068496097&quot; &quot;8&quot; 
+##  [4,] &quot;0.00575712722892935&quot; &quot;6&quot; 
+##  [5,] &quot;0.010638391245632&quot;   &quot;7&quot; 
+##  [6,] &quot;0.0150266654965777&quot;  &quot;6&quot; 
+##  [7,] &quot;0.0151494597588942&quot;  &quot;11&quot;
+##  [8,] &quot;0.0433573453017456&quot;  &quot;7&quot; 
+##  [9,] &quot;0.0479614336471382&quot;  &quot;7&quot; 
+##       substrates                                                                 
+##  [1,] &quot;ACO2|ALG13|CCT4|EIF3F|RPL27A|RPL31|RPL4|RPL7|RPLP2|RPS27|SEC13|UGGT1|XRN2&quot;
+##  [2,] &quot;POLR2C|RPL27A|RPL31|RPL4|RPL7|RPLP2|RPS27&quot;                                
+##  [3,] &quot;RPL27A|RPL31|RPL4|RPL7|RPLP2|RPS27|SMG7|SMG8&quot;                             
+##  [4,] &quot;RPL27A|RPL31|RPL4|RPL7|RPLP2|RPS27&quot;                                       
+##  [5,] &quot;EIF3F|RPL27A|RPL31|RPL4|RPL7|RPLP2|RPS27&quot;                                 
+##  [6,] &quot;RPL27A|RPL31|RPL4|RPL7|RPLP2|RPS27&quot;                                       
+##  [7,] &quot;EXOSC2|PSMA1|PSMD1|RPL27A|RPL31|RPL4|RPL7|RPLP2|RPS27|SMG7|SMG8&quot;          
+##  [8,] &quot;POLR2C|RPL27A|RPL31|RPL4|RPL7|RPLP2|RPS27&quot;                                
+##  [9,] &quot;EIF3F|RPL27A|RPL31|RPL4|RPL7|RPLP2|RPS27&quot;                                 
+## 
+## $`cluster 8`
+##       kinase                                                          
+##  [1,] &quot;REACTOME_CELL_CYCLE&quot;                                           
+##  [2,] &quot;REACTOME_SIGNALING_BY_HIPPO&quot;                                   
+##  [3,] &quot;REACTOME_TELOMERE_MAINTENANCE&quot;                                 
+##  [4,] &quot;REACTOME_SYNTHESIS_OF_DNA&quot;                                     
+##  [5,] &quot;REACTOME_MEIOTIC_RECOMBINATION&quot;                                
+##  [6,] &quot;REACTOME_DNA_STRAND_ELONGATION&quot;                                
+##  [7,] &quot;REACTOME_DNA_REPLICATION&quot;                                      
+##  [8,] &quot;REACTOME_P53_INDEPENDENT_G1_S_DNA_DAMAGE_CHECKPOINT&quot;           
+##  [9,] &quot;REACTOME_RNA_POL_I_TRANSCRIPTION&quot;                              
+## [10,] &quot;REACTOME_M_G1_TRANSITION&quot;                                      
+## [11,] &quot;REACTOME_CELL_CYCLE_CHECKPOINTS&quot;                               
+## [12,] &quot;REACTOME_CHROMOSOME_MAINTENANCE&quot;                               
+## [13,] &quot;REACTOME_RNA_POL_I_RNA_POL_III_AND_MITOCHONDRIAL_TRANSCRIPTION&quot;
+## [14,] &quot;REACTOME_CELL_CYCLE_MITOTIC&quot;                                   
+## [15,] &quot;REACTOME_MEIOSIS&quot;                                              
+## [16,] &quot;REACTOME_METABOLISM_OF_PROTEINS&quot;                               
+## [17,] &quot;REACTOME_S_PHASE&quot;                                              
+## [18,] &quot;REACTOME_MITOTIC_M_M_G1_PHASES&quot;                                
+## [19,] &quot;REACTOME_TRANSCRIPTION&quot;                                        
+## [20,] &quot;REACTOME_G2_M_CHECKPOINTS&quot;                                     
+## [21,] &quot;REACTOME_DNA_REPAIR&quot;                                           
+##       pvalue                 size
+##  [1,] &quot;0.000603018217264671&quot; &quot;26&quot;
+##  [2,] &quot;0.000858836158729387&quot; &quot;5&quot; 
+##  [3,] &quot;0.00124550960466867&quot;  &quot;6&quot; 
+##  [4,] &quot;0.00301145090225719&quot;  &quot;8&quot; 
+##  [5,] &quot;0.00430662769927624&quot;  &quot;5&quot; 
+##  [6,] &quot;0.00430662769927624&quot;  &quot;5&quot; 
+##  [7,] &quot;0.00466874774824501&quot;  &quot;14&quot;
+##  [8,] &quot;0.00587264854078734&quot;  &quot;5&quot; 
+##  [9,] &quot;0.00587264854078734&quot;  &quot;5&quot; 
+## [10,] &quot;0.00683905770546343&quot;  &quot;7&quot; 
+## [11,] &quot;0.00775346604248046&quot;  &quot;9&quot; 
+## [12,] &quot;0.0103717822716997&quot;   &quot;8&quot; 
+## [13,] &quot;0.0105033605625056&quot;   &quot;6&quot; 
+## [14,] &quot;0.010857736873176&quot;    &quot;19&quot;
+## [15,] &quot;0.0117435174166304&quot;   &quot;7&quot; 
+## [16,] &quot;0.0118561145101961&quot;   &quot;12&quot;
+## [17,] &quot;0.0159712059244848&quot;   &quot;8&quot; 
+## [18,] &quot;0.0160007423869951&quot;   &quot;12&quot;
+## [19,] &quot;0.0238607158922738&quot;   &quot;11&quot;
+## [20,] &quot;0.0342698251309417&quot;   &quot;5&quot; 
+## [21,] &quot;0.040841345165335&quot;    &quot;7&quot; 
+##       substrates                                                                                                                                                      
+##  [1,] &quot;ANAPC4|ATM|CCND3|CENPJ|CENPL|CHEK2|DIDO1|GINS2|H2AFX|HIST1H2BF|KIF20A|MCM10|MCM6|NUF2|PMF1|POLA2|PRIM2|PRKAR2B|PSMD9|PSME2|PSME4|RFC2|STAG3|WRAP53|YWHAE|ZWINT&quot;
+##  [2,] &quot;LATS1|MOB1B|TJP1|TJP2|YWHAE&quot;                                                                                                                                   
+##  [3,] &quot;H2AFX|HIST1H2BF|POLA2|PRIM2|RFC2|WRAP53&quot;                                                                                                                       
+##  [4,] &quot;GINS2|MCM6|POLA2|PRIM2|PSMD9|PSME2|PSME4|RFC2&quot;                                                                                                                 
+##  [5,] &quot;ATM|BRCA2|H2AFX|HIST1H2BF|RAD50&quot;                                                                                                                               
+##  [6,] &quot;GINS2|MCM6|POLA2|PRIM2|RFC2&quot;                                                                                                                                   
+##  [7,] &quot;CENPL|GINS2|KIF20A|MCM10|MCM6|NUF2|PMF1|POLA2|PRIM2|PSMD9|PSME2|PSME4|RFC2|ZWINT&quot;                                                                              
+##  [8,] &quot;ATM|CHEK2|PSMD9|PSME2|PSME4&quot;                                                                                                                                   
+##  [9,] &quot;CBX3|H2AFX|HIST1H2BF|PTRF|TAF1C&quot;                                                                                                                               
+## [10,] &quot;MCM10|MCM6|POLA2|PRIM2|PSMD9|PSME2|PSME4&quot;                                                                                                                      
+## [11,] &quot;ANAPC4|ATM|CHEK2|MCM10|MCM6|PSMD9|PSME2|PSME4|RFC2&quot;                                                                                                            
+## [12,] &quot;DIDO1|H2AFX|HIST1H2BF|POLA2|PRIM2|RFC2|STAG3|WRAP53&quot;                                                                                                           
+## [13,] &quot;CBX3|H2AFX|HIST1H2BF|PTRF|SSB|TAF1C&quot;                                                                                                                           
+## [14,] &quot;ANAPC4|CCND3|CENPJ|CENPL|GINS2|KIF20A|MCM10|MCM6|NUF2|PMF1|POLA2|PRIM2|PRKAR2B|PSMD9|PSME2|PSME4|RFC2|YWHAE|ZWINT&quot;                                             
+## [15,] &quot;ATM|BRCA2|DIDO1|H2AFX|HIST1H2BF|RAD50|STAG3&quot;                                                                                                                   
+## [16,] &quot;CCT6A|CCT8|EEF1D|EIF3G|PGM3|RPL18|RPL29|RPL30|RPS3A|TOMM22|TUBA1B|VDAC1&quot;                                                                                       
+## [17,] &quot;GINS2|MCM6|POLA2|PRIM2|PSMD9|PSME2|PSME4|RFC2&quot;                                                                                                                 
+## [18,] &quot;CENPL|KIF20A|MCM10|MCM6|NUF2|PMF1|POLA2|PRIM2|PSMD9|PSME2|PSME4|ZWINT&quot;                                                                                         
+## [19,] &quot;CBX3|ELL|H2AFX|HIST1H2BF|PABPN1|PTRF|SSB|SSRP1|TAF1|TAF12|TAF1C&quot;                                                                                               
+## [20,] &quot;ATM|CHEK2|MCM10|MCM6|RFC2&quot;                                                                                                                                     
+## [21,] &quot;ATM|BRCA2|ERCC4|FANCG|H2AFX|RAD50|RFC2&quot;                                                                                                                        
+## 
+## $`cluster 9`
+##       kinase                                        
+##  [1,] &quot;REACTOME_COSTIMULATION_BY_THE_CD28_FAMILY&quot;   
+##  [2,] &quot;REACTOME_CTLA4_INHIBITORY_SIGNALING&quot;         
+##  [3,] &quot;REACTOME_PKB_MEDIATED_EVENTS&quot;                
+##  [4,] &quot;REACTOME_INSULIN_RECEPTOR_SIGNALLING_CASCADE&quot;
+##  [5,] &quot;REACTOME_SIGNALING_BY_INSULIN_RECEPTOR&quot;      
+##  [6,] &quot;REACTOME_SIGNALING_BY_SCF_KIT&quot;               
+##  [7,] &quot;REACTOME_MITOTIC_PROMETAPHASE&quot;               
+##  [8,] &quot;REACTOME_MEMBRANE_TRAFFICKING&quot;               
+##  [9,] &quot;REACTOME_PI3K_CASCADE&quot;                       
+## [10,] &quot;REACTOME_MITOTIC_M_M_G1_PHASES&quot;              
+## [11,] &quot;REACTOME_DNA_REPLICATION&quot;                    
+##       pvalue                 size
+##  [1,] &quot;1.11664554938882e-05&quot; &quot;7&quot; 
+##  [2,] &quot;5.93480119625737e-05&quot; &quot;5&quot; 
+##  [3,] &quot;0.00352983086867784&quot;  &quot;5&quot; 
+##  [4,] &quot;0.00437253795020043&quot;  &quot;7&quot; 
+##  [5,] &quot;0.00543883513476456&quot;  &quot;7&quot; 
+##  [6,] &quot;0.00668890378606709&quot;  &quot;7&quot; 
+##  [7,] &quot;0.0070593677487118&quot;   &quot;9&quot; 
+##  [8,] &quot;0.00981226999075092&quot;  &quot;7&quot; 
+##  [9,] &quot;0.0146977618874516&quot;   &quot;5&quot; 
+## [10,] &quot;0.0201983972912044&quot;   &quot;12&quot;
+## [11,] &quot;0.0341965215880874&quot;   &quot;12&quot;
+##       substrates                                                                     
+##  [1,] &quot;CD80|MTOR|PAK2|PPP2R5A|PPP2R5D|PPP2R5E|SRC&quot;                                   
+##  [2,] &quot;CD80|PPP2R5A|PPP2R5D|PPP2R5E|SRC&quot;                                             
+##  [3,] &quot;EEF2K|MTOR|RPS6KB1|RPTOR|TSC2&quot;                                                
+##  [4,] &quot;EEF2K|GRB10|MTOR|RAF1|RPS6KB1|RPTOR|TSC2&quot;                                     
+##  [5,] &quot;EEF2K|GRB10|MTOR|RAF1|RPS6KB1|RPTOR|TSC2&quot;                                     
+##  [6,] &quot;AKT1S1|GRB10|MTOR|RAF1|SH2B3|SRC|TSC2&quot;                                        
+##  [7,] &quot;BUB1B|CDCA8|CLASP1|KNTC1|NUP133|PPP2R5A|PPP2R5D|PPP2R5E|SGOL1&quot;                
+##  [8,] &quot;BLOC1S3|CHMP2B|GAK|GJA1|SNX2|SRC|VPS4A&quot;                                       
+##  [9,] &quot;EEF2K|MTOR|RPS6KB1|RPTOR|TSC2&quot;                                                
+## [10,] &quot;BUB1B|CDCA8|CLASP1|KNTC1|NUP133|ORC1|POLA1|PPP2R5A|PPP2R5D|PPP2R5E|RPA1|SGOL1&quot;
+## [11,] &quot;BUB1B|CDCA8|CLASP1|KNTC1|NUP133|ORC1|POLA1|PPP2R5A|PPP2R5D|PPP2R5E|RPA1|SGOL1&quot;
+## 
+## $`cluster 10`
+##      kinase                                                              
+## [1,] &quot;REACTOME_METABOLISM_OF_MRNA&quot;                                       
+## [2,] &quot;REACTOME_CLEAVAGE_OF_GROWING_TRANSCRIPT_IN_THE_TERMINATION_REGION_&quot;
+##      pvalue               size
+## [1,] &quot;0.0127490927502109&quot; &quot;10&quot;
+## [2,] &quot;0.021122819218469&quot;  &quot;5&quot; 
+##      substrates                                                   
+## [1,] &quot;CNOT2|EIF4A3|EXOSC9|PSMD2|PSMD3|PSMD4|RNPS1|RPL3|RPS10|RPS3&quot;
+## [2,] &quot;CPSF7|RNPS1|SLBP|SRSF2|SRSF6&quot;                               
+## 
+## $`cluster 13`
+##       kinase                                                     
+##  [1,] &quot;REACTOME_SIGNALING_BY_FGFR_MUTANTS&quot;                       
+##  [2,] &quot;REACTOME_SIGNALLING_TO_ERKS&quot;                              
+##  [3,] &quot;REACTOME_NRAGE_SIGNALS_DEATH_THROUGH_JNK&quot;                 
+##  [4,] &quot;REACTOME_INSULIN_RECEPTOR_SIGNALLING_CASCADE&quot;             
+##  [5,] &quot;REACTOME_SIGNALING_BY_INSULIN_RECEPTOR&quot;                   
+##  [6,] &quot;REACTOME_SIGNALING_BY_GPCR&quot;                               
+##  [7,] &quot;REACTOME_CELL_DEATH_SIGNALLING_VIA_NRAGE_NRIF_AND_NADE&quot;   
+##  [8,] &quot;REACTOME_GPCR_DOWNSTREAM_SIGNALING&quot;                       
+##  [9,] &quot;REACTOME_SIGNALING_BY_FGFR_IN_DISEASE&quot;                    
+## [10,] &quot;REACTOME_GASTRIN_CREB_SIGNALLING_PATHWAY_VIA_PKC_AND_MAPK&quot;
+## [11,] &quot;REACTOME_MAP_KINASE_ACTIVATION_IN_TLR_CASCADE&quot;            
+## [12,] &quot;REACTOME_SIGNALLING_BY_NGF&quot;                               
+## [13,] &quot;REACTOME_SIGNALING_BY_ERBB4&quot;                              
+##       pvalue                 size
+##  [1,] &quot;0.000917317720910032&quot; &quot;5&quot; 
+##  [2,] &quot;0.00541199233331878&quot;  &quot;5&quot; 
+##  [3,] &quot;0.00612760088997398&quot;  &quot;6&quot; 
+##  [4,] &quot;0.00750698632304495&quot;  &quot;7&quot; 
+##  [5,] &quot;0.00926930811840987&quot;  &quot;7&quot; 
+##  [6,] &quot;0.0174587831214223&quot;   &quot;9&quot; 
+##  [7,] &quot;0.0192105259325689&quot;   &quot;6&quot; 
+##  [8,] &quot;0.0194037103032478&quot;   &quot;7&quot; 
+##  [9,] &quot;0.0215971072346727&quot;   &quot;8&quot; 
+## [10,] &quot;0.021758213000611&quot;    &quot;5&quot; 
+## [11,] &quot;0.0329104989519511&quot;   &quot;5&quot; 
+## [12,] &quot;0.0331793894421132&quot;   &quot;12&quot;
+## [13,] &quot;0.0382279848242493&quot;   &quot;6&quot; 
+##       substrates                                                                   
+##  [1,] &quot;FGFR1OP|FRS2|GAB1|MYO18A|SOS1&quot;                                              
+##  [2,] &quot;FRS2|MAP2K1|MAPK14|MAPK3|SOS1&quot;                                              
+##  [3,] &quot;ARHGEF11|FGD1|ITSN1|MAGED1|MAPK8|SOS1&quot;                                      
+##  [4,] &quot;EIF4E|FRS2|GAB1|MAP2K1|MAPK3|PRKAA1|SOS1&quot;                                   
+##  [5,] &quot;EIF4E|FRS2|GAB1|MAP2K1|MAPK3|PRKAA1|SOS1&quot;                                   
+##  [6,] &quot;ARHGEF11|FGD1|ITSN1|MAP2K1|MAPK3|PLCB3|PLCB4|S1PR2|SOS1&quot;                    
+##  [7,] &quot;ARHGEF11|FGD1|ITSN1|MAGED1|MAPK8|SOS1&quot;                                      
+##  [8,] &quot;ARHGEF11|FGD1|ITSN1|PLCB3|PLCB4|S1PR2|SOS1&quot;                                 
+##  [9,] &quot;FGFR1OP|FRS2|GAB1|MAP2K1|MAPK3|MYO18A|RICTOR|SOS1&quot;                          
+## [10,] &quot;MAP2K1|MAPK3|PLCB3|PLCB4|SOS1&quot;                                              
+## [11,] &quot;MAP2K1|MAPK14|MAPK3|MAPK8|TAB2&quot;                                             
+## [12,] &quot;AP2A1|ARHGEF11|FGD1|FRS2|ITSN1|MAGED1|MAP2K1|MAPK14|MAPK3|MAPK8|RICTOR|SOS1&quot;
+## [13,] &quot;MAP2K1|MAPK3|NEDD4|RICTOR|SOS1|TAB2&quot;</code></pre>
+<p><img src="timecourse_files/figure-html/unnamed-chunk-5-1.png" width="960" /></p>
+</div>
+<div id="session-info" class="section level1">
+<h1><span class="header-section-number">2</span> Session Info</h1>
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>## R version 3.6.0 (2019-04-26)
+## Platform: x86_64-apple-darwin15.6.0 (64-bit)
+## Running under: macOS  10.15
+## 
+## Matrix products: default
+## BLAS:   /System/Library/Frameworks/Accelerate.framework/Versions/A/Frameworks/vecLib.framework/Versions/A/libBLAS.dylib
+## LAPACK: /Library/Frameworks/R.framework/Versions/3.6/Resources/lib/libRlapack.dylib
+## 
+## locale:
+## [1] en_AU.UTF-8/en_AU.UTF-8/en_AU.UTF-8/C/en_AU.UTF-8/en_AU.UTF-8
+## 
+## attached base packages:
+## [1] parallel  stats4    stats     graphics  grDevices utils     datasets 
+## [8] methods   base     
+## 
+## other attached packages:
+##  [1] ggplot2_3.1.1        ClueR_1.4            e1071_1.7-1         
+##  [4] Biobase_2.44.0       GenomicRanges_1.36.0 GenomeInfoDb_1.20.0 
+##  [7] IRanges_2.18.0       S4Vectors_0.22.1     BiocGenerics_0.30.0 
+## [10] scMerge_1.0.0        PhosR_0.1.0          directPA_1.4        
+## [13] calibrate_1.7.2      MASS_7.3-51.4        rgl_0.100.19        
+## 
+## loaded via a namespace (and not attached):
+##   [1] colorspace_1.4-1            RcppEigen_0.3.3.5.0        
+##   [3] class_7.3-15                htmlTable_1.13.1           
+##   [5] XVector_0.24.0              base64enc_0.1-3            
+##   [7] rstudioapi_0.10             proxy_0.4-23               
+##   [9] codetools_0.2-16            splines_3.6.0              
+##  [11] knitr_1.23                  Formula_1.2-3              
+##  [13] jsonlite_1.6                cluster_2.0.9              
+##  [15] shiny_1.3.2                 BiocManager_1.30.4         
+##  [17] compiler_3.6.0              backports_1.1.4            
+##  [19] assertthat_0.2.1            Matrix_1.2-17              
+##  [21] lazyeval_0.2.2              limma_3.40.6               
+##  [23] later_0.8.0                 acepack_1.4.1              
+##  [25] htmltools_0.3.6             tools_3.6.0                
+##  [27] rsvd_1.0.1                  gtable_0.3.0               
+##  [29] glue_1.3.1                  GenomeInfoDbData_1.2.1     
+##  [31] dplyr_0.8.1                 Rcpp_1.0.1                 
+##  [33] bbmle_1.0.20                gdata_2.18.0               
+##  [35] nlme_3.1-140                iterators_1.0.10           
+##  [37] crosstalk_1.0.0             xfun_0.7                   
+##  [39] stringr_1.4.0               mime_0.6                   
+##  [41] miniUI_0.1.1.1              irlba_2.3.3                
+##  [43] gtools_3.8.1                statmod_1.4.32             
+##  [45] dendextend_1.12.0           zlibbioc_1.30.0            
+##  [47] scales_1.0.0                pcaMethods_1.76.0          
+##  [49] promises_1.0.1              SummarizedExperiment_1.14.0
+##  [51] RColorBrewer_1.1-2          SingleCellExperiment_1.6.0 
+##  [53] yaml_2.2.0                  gridExtra_2.3              
+##  [55] rpart_4.1-15                latticeExtra_0.6-28        
+##  [57] stringi_1.4.3               foreach_1.4.4              
+##  [59] checkmate_1.9.3             caTools_1.17.1.2           
+##  [61] BiocParallel_1.18.0         manipulateWidget_0.10.0    
+##  [63] rlang_0.4.0                 pkgconfig_2.0.2            
+##  [65] matrixStats_0.55.0          bitops_1.0-6               
+##  [67] M3Drop_1.10.0               evaluate_0.13              
+##  [69] lattice_0.20-38             purrr_0.3.2                
+##  [71] ruv_0.9.7                   labeling_0.3               
+##  [73] htmlwidgets_1.3             tidyselect_0.2.5           
+##  [75] plyr_1.8.4                  magrittr_1.5               
+##  [77] R6_2.4.0                    gplots_3.0.1.1             
+##  [79] Hmisc_4.2-0                 DelayedArray_0.10.0        
+##  [81] withr_2.1.2                 pillar_1.4.1               
+##  [83] foreign_0.8-71              mgcv_1.8-28                
+##  [85] survival_2.44-1.1           RCurl_1.95-4.12            
+##  [87] nnet_7.3-12                 tibble_2.1.2               
+##  [89] crayon_1.3.4                KernSmooth_2.23-15         
+##  [91] rmarkdown_1.13              viridis_0.5.1              
+##  [93] grid_3.6.0                  data.table_1.12.2          
+##  [95] reldist_1.6-6               digest_0.6.19              
+##  [97] webshot_0.5.1               xtable_1.8-4               
+##  [99] httpuv_1.5.1                numDeriv_2016.8-1          
+## [101] munsell_0.5.0               viridisLite_0.3.0</code></pre>
+</div>
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

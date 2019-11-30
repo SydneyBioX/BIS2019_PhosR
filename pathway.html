@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Pengyi Yang" />
+
+
+<title>1, 2, 3-dimensional pathway analysis of (phospho)proteomic data</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/paper.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<script src="site_libs/navigation-1.1/codefolding.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 64px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 69px;
+  margin-top: -69px;
+}
+.section h2 {
+  padding-top: 69px;
+  margin-top: -69px;
+}
+.section h3 {
+  padding-top: 69px;
+  margin-top: -69px;
+}
+.section h4 {
+  padding-top: 69px;
+  margin-top: -69px;
+}
+.section h5 {
+  padding-top: 69px;
+  margin-top: -69px;
+}
+.section h6 {
+  padding-top: 69px;
+  margin-top: -69px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
+<script>
+$(document).ready(function () {
+  window.initializeCodeFolding("show" === "show");
+});
+</script>
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">PhosR - BioInfoSummer Workshop</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="qc.html">QC &amp; pre-processing</a>
+</li>
+<li>
+  <a href="pathway.html">Pathway analysis</a>
+</li>
+<li>
+  <a href="timecourse.html">Time-course analysis</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+<div class="btn-group pull-right">
+<button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+</ul>
+</div>
+
+
+
+<h1 class="title toc-ignore">1, 2, 3-dimensional pathway analysis of (phospho)proteomic data</h1>
+<h4 class="author">Pengyi Yang</h4>
+<h4 class="date">Dec 2019</h4>
+
+</div>
+
+
+<div id="introduction" class="section level1">
+<h1><span class="header-section-number">1</span> Introduction</h1>
+<p>Pathway analysis is an essential component in most of omic science. Here, we will introduce basic methods for “1-dimension” pathway analysis; and more advanced methods for implemented in the R package <code>directPA</code> for performing “2 and 3-dimentional” pathway analyses (<a href="https://doi.org/10.1093/bioinformatics/btt616">Pengyi Yang et al. 2014</a>). We will start with proteomic data and look at gene-centric pathways and then extend to phosphoproteomic data and look at signalling pathways.</p>
+<p><strong>Load in packages</strong></p>
+<pre class="r"><code>suppressPackageStartupMessages({
+  library(PhosR)
+  library(directPA)
+})</code></pre>
+</div>
+<div id="gene-centric-pathway-analysis" class="section level1">
+<h1><span class="header-section-number">2</span> Gene-centric pathway analysis</h1>
+<div id="silac-plasma-membrane-proteome-dataset" class="section level2">
+<h2><span class="header-section-number">2.1</span> SILAC plasma membrane proteome dataset</h2>
+<p>We will first use a SILAC-based proteomic dataset for demonstration of gene-centric pathway analysis. It contains the plasma membrane (PM) proteome of insulin responsive 3T3-L1 adipocytes under three different treatment conditions and a basal condition. The three treatment conditions are (1) insulin stimulation; (2) wortmannin inhibition plus insulin stimulation; and (3) MK inhibition plus insulin stimulation. Proteomes in this data meansured by using SILAC-based mass spectrometry. The dataset has already been pre-processed into log2 fold changes of (1) Ins vs Basal; (2) Ins+Wmn vs Basal; and (3) Ins+MK vs Basal.</p>
+<p>This dataset is already included in the package <code>directPA</code>. We can load this example dataset into current working environment as <code>data(PM)</code>.</p>
+</div>
+<div id="conventional-gene-pathway-analysis-1d" class="section level2">
+<h2><span class="header-section-number">2.2</span> Conventional gene pathway analysis (1D)</h2>
+<p>Let us start with conventional 1-dimensional pathway analysis. The following demonstrates finding pathways that are enriched in insulin stimulation compared to basal. <code>directPA</code> package has built in pathway annotations and <code>PhosR</code> package implements both over-representation test and rank-based test. The pathway annotations included in <code>directPA</code> are from KEGG database and Reactome database. You can always provide your own pathway annotations such as other popular databases (e.g. gene ontology or GO).</p>
+<pre class="r"><code># load pathway annotations
+data(PM)
+data(Pathways)
+geneSet &lt;- names(sort(PM[,1], decreasing = TRUE))[1:100]
+
+path1 &lt;- pathwayOverrepresent(geneSet, annotation=Pathways.KEGG, universe = rownames(PM), alter = &quot;greater&quot;)
+path2 &lt;- pathwayRankBasedEnrichment(PM[,1], annotation=Pathways.KEGG, alter = &quot;greater&quot;)
+
+path1[1:5,c(&quot;pvalue&quot;, &quot;# of substrates&quot;)]</code></pre>
+<pre><code>##                                                pvalue              
+## KEGG_SNARE_INTERACTIONS_IN_VESICULAR_TRANSPORT &quot;0.0766668712824008&quot;
+## KEGG_RIBOSOME                                  &quot;0.140645733814865&quot; 
+## KEGG_N_GLYCAN_BIOSYNTHESIS                     &quot;0.483905192574014&quot; 
+## KEGG_STEROID_BIOSYNTHESIS                      &quot;0.527320456676819&quot; 
+## KEGG_RENIN_ANGIOTENSIN_SYSTEM                  &quot;0.838917396716807&quot; 
+##                                                # of substrates
+## KEGG_SNARE_INTERACTIONS_IN_VESICULAR_TRANSPORT &quot;7&quot;            
+## KEGG_RIBOSOME                                  &quot;12&quot;           
+## KEGG_N_GLYCAN_BIOSYNTHESIS                     &quot;5&quot;            
+## KEGG_STEROID_BIOSYNTHESIS                      &quot;2&quot;            
+## KEGG_RENIN_ANGIOTENSIN_SYSTEM                  &quot;1&quot;</code></pre>
+<pre class="r"><code>path2[1:5,c(&quot;pvalue&quot;, &quot;# of substrates&quot;)]</code></pre>
+<pre><code>##                                                pvalue                
+## KEGG_RIBOSOME                                  &quot;4.29100890328692e-10&quot;
+## KEGG_SNARE_INTERACTIONS_IN_VESICULAR_TRANSPORT &quot;6.81644137750794e-05&quot;
+## KEGG_N_GLYCAN_BIOSYNTHESIS                     &quot;6.89092354625917e-05&quot;
+## KEGG_PROTEIN_EXPORT                            &quot;0.00235739226937965&quot; 
+## KEGG_GLYCEROPHOSPHOLIPID_METABOLISM            &quot;0.00335588047711627&quot; 
+##                                                # of substrates
+## KEGG_RIBOSOME                                  &quot;44&quot;           
+## KEGG_SNARE_INTERACTIONS_IN_VESICULAR_TRANSPORT &quot;17&quot;           
+## KEGG_N_GLYCAN_BIOSYNTHESIS                     &quot;11&quot;           
+## KEGG_PROTEIN_EXPORT                            &quot;5&quot;            
+## KEGG_GLYCEROPHOSPHOLIPID_METABOLISM            &quot;12&quot;</code></pre>
+<pre class="r"><code>plot(-log10(as.numeric(path1[names(Pathways.KEGG),1])), -log10(as.numeric(path2[names(Pathways.KEGG),1])), xlab=&quot;Overrepresentation (-log10 pvalue)&quot;, ylab=&quot;Rank-based enrichment (-log10 pvalue)&quot;, main=&quot;Comparison of 1D pathway analyses&quot;)</code></pre>
+<p><img src="pathway_files/figure-html/unnamed-chunk-1-1.png" width="480" /></p>
+</div>
+<div id="d-gene-pathway-analysis-using-directpa" class="section level2">
+<h2><span class="header-section-number">2.3</span> 2D gene pathway analysis using directPA</h2>
+<p>What if we want to find the pathways that are up-regulated in insulin stimulation vs basal but inhibited by wortmannin or MK? Clearly, conventional 1-dimensional pathway analysis can not directly be applied to address this question. That is why we have implemented a 2-dimensional direction pathway analysis method to address this. Below is the demonstration for this.</p>
+<pre class="r"><code>par(mfrow=c(1,2))
+dpa1 &lt;- directPA(PM[,c(1,2)], direction=pi/2, annotation=Pathways.KEGG, main=&quot;Direction pathway analysis&quot;)
+dpa2 &lt;- directPA(PM[,c(1,3)], direction=pi/2, annotation=Pathways.KEGG, main=&quot;Direction pathway analysis&quot;)</code></pre>
+<p><img src="pathway_files/figure-html/unnamed-chunk-2-1.png" width="768" /></p>
+<pre class="r"><code>dpa1$pathways[1:5,]</code></pre>
+<pre><code>## NULL</code></pre>
+<pre class="r"><code>dpa2$pathways[1:5,]</code></pre>
+<pre><code>## NULL</code></pre>
+<p>We can obtain the pvalues of genes as how significant they are in the direction we are testing using <code>dpa1$gene.pvalues</code>. Below we plot for genes that are active in insulin stimulation and inhibited by either wortmannin or MK. As can be seen, some of the genes are different (i.e. inhibited by wortmannin only or MK only). We can dissect these two conditions and their corresponding pathways using, again, 2D test.</p>
+<pre class="r"><code>par(mfrow=c(1,2))
+plot(dpa1$gene.pvalues[rownames(PM)], dpa2$gene.pvalues[rownames(PM)], xlab=&quot;Gene pvalue from dpa1&quot;, ylab=&quot;Gene pvalue from dpa2&quot;)
+
+dpa3 &lt;- directPA(PM[,c(2,3)], direction=pi/2, annotation=Pathways.KEGG, main=&quot;Direction pathway analysis&quot;)</code></pre>
+<p><img src="pathway_files/figure-html/unnamed-chunk-3-1.png" width="768" /></p>
+<pre class="r"><code>dpa3$pathways[1:5,]</code></pre>
+<pre><code>## NULL</code></pre>
+</div>
+<div id="d-gene-pathway-analysis-using-directpa-1" class="section level2">
+<h2><span class="header-section-number">2.4</span> 3D gene pathway analysis using directPA</h2>
+<p>The above repeatitve 2D test is good at answering comparisons involving 2 treatments and 1 control. What if we want to ask a question such as “genes that are up-regulated in insulin stimulation; inhibited by MK; but not inhibited by wortmannin”? For this, we need a 3D test which is what we will introduce below.</p>
+<pre class="r"><code>dPA &lt;- directPA(Tc=PM, direction=c(1,1,-1), annotation=Pathways.KEGG, main=&quot;Direction pathway analysis&quot;)
+dPA$gst[order(unlist(dPA$gst[,1])),][1:20,]</code></pre>
+<pre><code>##                                                pvalue       size
+## KEGG_PEROXISOME                                4.450701e-05 38  
+## KEGG_STEROID_BIOSYNTHESIS                      0.0007532071 7   
+## KEGG_ANTIGEN_PROCESSING_AND_PRESENTATION       0.00219594   10  
+## KEGG_LIMONENE_AND_PINENE_DEGRADATION           0.006452643  5   
+## KEGG_N_GLYCAN_BIOSYNTHESIS                     0.008243181  11  
+## KEGG_RIBOSOME                                  0.01290797   44  
+## KEGG_PARKINSONS_DISEASE                        0.02034015   50  
+## KEGG_BIOSYNTHESIS_OF_UNSATURATED_FATTY_ACIDS   0.02246491   10  
+## KEGG_PROTEIN_EXPORT                            0.03451366   5   
+## KEGG_BETA_ALANINE_METABOLISM                   0.05575214   8   
+## KEGG_LYSINE_DEGRADATION                        0.07957553   13  
+## KEGG_STEROID_HORMONE_BIOSYNTHESIS              0.08834657   7   
+## KEGG_OXIDATIVE_PHOSPHORYLATION                 0.09396306   58  
+## KEGG_GLYCEROPHOSPHOLIPID_METABOLISM            0.09478043   12  
+## KEGG_ALZHEIMERS_DISEASE                        0.09791927   55  
+## KEGG_FATTY_ACID_METABOLISM                     0.09982681   20  
+## KEGG_ALDOSTERONE_REGULATED_SODIUM_REABSORPTION 0.1043517    6   
+## KEGG_GLYCEROLIPID_METABOLISM                   0.132431     10  
+## KEGG_CARDIAC_MUSCLE_CONTRACTION                0.1331192    18  
+## KEGG_HUNTINGTONS_DISEASE                       0.1478461    59</code></pre>
+</div>
+</div>
+<div id="signalling-pathways-analysis-using-phosphoproteomic-data" class="section level1">
+<h1><span class="header-section-number">3</span> Signalling pathways analysis using phosphoproteomic data</h1>
+<p>The above demonstrated some gene-centric pathway analyses using proteomic data. Now, we will use the same methodology for testing kinase enrichment in phosphoproteomic data.</p>
+<div id="embryonic-stem-cell-differentiation-phosphoproteomic-dataset" class="section level2">
+<h2><span class="header-section-number">3.1</span> Embryonic stem cell differentiation phosphoproteomic dataset</h2>
+<p>In this section, we will use an embryonic stem cell (ESC) differentiation dataset for demonstration. This dataset contains 12 time points profiling the transition of ESCs to epiblast-like cells (EpiLCs). Details regarding the dataset can be found in (<a href="https://doi.org/10.1016/j.cels.2019.03.012">Pengyi Yang et al. 2019</a>). The quantification of the phophorylation at each time point were converted into log2 fold change with respect to the first time point of 0 hour.</p>
+<p>This dataset is included in the package <code>PhosR</code>. We can load this example dataset into current working environment as <code>data(phosphoESC)</code>.</p>
+</div>
+<div id="d-signalling-pathway-analysis-using-directpa" class="section level2">
+<h2><span class="header-section-number">3.2</span> 2D signalling pathway analysis using directPA</h2>
+<p>One key aspect in studying signalling pathways is to identify key kinases that are involved in signalling cascades. To identify these kinases, we make use of kinase-substrate annotation databases such as PhosphoSitePlus (<a href="https://dx.doi.org/10.1093/nar/gkr1122">Hornbeck et al. 2012</a>) and Phospho.ELM (<a href="https://dx.doi.org/10.1093/nar/gkq1104">Dinkel et al. 2011</a>). These databases are included in the <code>PhosR</code> and <code>directPA</code> packages already. To access them, simply load the package and access the data by <code>data(&quot;PhosphoSitePlus&quot;)</code> and <code>data(&quot;PhosphoELM&quot;)</code>.</p>
+<p>Back to the example. Now, suppose we partition the signalling into early (5-15 minutes) and late (24-48h) stages during the differentiation process, we can then identify kinases that are active in these time points by testing kinase-substrates that are up-regulated in phosphorylation level in both time points as below:</p>
+<pre class="r"><code>par(mfrow=c(1,2))
+data(&quot;phosphoESC&quot;)
+data(&quot;PhosphoSitePlus&quot;)
+rownames(phosphoESC) &lt;- sapply(strsplit(rownames(phosphoESC), &quot;;&quot;), function(x)paste(toupper(x[1]), x[2], &quot;&quot;, sep=&quot;;&quot;))
+
+kPA1 &lt;- kinasePA(Tc=phosphoESC[,c(&quot;X5m&quot;,&quot;X15m&quot;)], direction=0, annotation=PhosphoSite.mouse, main=&quot;Direction pathway analysis&quot;)
+kPA1$kinase[1:5,]</code></pre>
+<pre><code>##      pvalue       size
+## Abl  NA           1   
+## Ack  NA           0   
+## Akt1 2.426171e-07 18  
+## Akt2 NA           0   
+## Akt3 NA           1</code></pre>
+<pre class="r"><code>kPA2 &lt;- kinasePA(Tc=phosphoESC[,c(&quot;X24h&quot;,&quot;X48h&quot;)], direction=0, annotation=PhosphoSite.mouse, main=&quot;Direction pathway analysis&quot;)</code></pre>
+<p><img src="pathway_files/figure-html/unnamed-chunk-5-1.png" width="768" /></p>
+<pre class="r"><code>kPA2$kinase[1:5,]</code></pre>
+<pre><code>##      pvalue       size
+## Abl  NA           1   
+## Ack  NA           0   
+## Akt1 6.428913e-05 18  
+## Akt2 NA           0   
+## Akt3 NA           1</code></pre>
+<p>There is also a function called <code>perturbPlot2d</code> for testing and visualising activity of all kinases on all possible directions. Below are the results from using this function. Details of this function and its implementation is described in our publication <strong>kinase perturbation analysis</strong> (<strong>kinasePA</strong>) (<a href="https://doi.org/10.1002/pmic.201600068">Yang et al. 2016</a>).</p>
+<pre class="r"><code>z1 &lt;- perturbPlot2d(Tc=phosphoESC[,c(&quot;X5m&quot;,&quot;X15m&quot;)], annotation=PhosphoSite.mouse, cex=1, xlim=c(-5, 12), ylim=c(-5, 11), main=&quot;Kinase perturbation analysis&quot;)</code></pre>
+<p><img src="pathway_files/figure-html/unnamed-chunk-6-1.png" width="768" /></p>
+<pre class="r"><code>z2 &lt;- perturbPlot2d(Tc=phosphoESC[,c(&quot;X24h&quot;,&quot;X48h&quot;)], annotation=PhosphoSite.mouse, cex=1, xlim=c(-5, 11), ylim=c(-5, 11), main=&quot;Kinase perturbation analysis&quot;)</code></pre>
+<p><img src="pathway_files/figure-html/unnamed-chunk-6-2.png" width="768" /></p>
+</div>
+</div>
+<div id="gene-centric-pathway-analysis-of-phosphoproteomic-data" class="section level1">
+<h1><span class="header-section-number">4</span> Gene-centric pathway analysis of phosphoproteomic data</h1>
+<p>While the above kinase-substrate-based analysis of phosphoproteomic data is informative, the annotation of kinases and their substrates in current databases are quite limited. This leads to the limited use of a small subset of phosphosites whereas the majority of the identified phosphosites in the phosphoproteomic data are not used for the analysis.</p>
+<p>One possible way to utilise more from the phosphoproteomic data is to perform gene-centric analysis by summarising phosphosite-level information to each protein. The following is an example for such type of analysis using the <code>phosCollapse</code> function in package <code>PhosR</code> and then <code>directPA</code> for gene-centric 2D pathway analysis.</p>
+<pre class="r"><code># summarise phospho-level information to genes
+phosphoESC.sum &lt;- phosCollapse(phosphoESC, gsub(&quot;;.+&quot;, &quot;&quot;, rownames(phosphoESC)), stat = apply(abs(phosphoESC), 1, max), by = &quot;max&quot;)
+
+par(mfrow=c(1,2))
+dPA1 &lt;- directPA(Tc=phosphoESC.sum[,c(&quot;X5m&quot;,&quot;X15m&quot;)], direction=0, annotation=Pathways.reactome, main=&quot;Direction pathway analysis&quot;)
+dPA1$pathways[1:5,]</code></pre>
+<pre><code>## NULL</code></pre>
+<pre class="r"><code>dPA2 &lt;- directPA(Tc=phosphoESC.sum[,c(&quot;X24h&quot;,&quot;X48h&quot;)], direction=0, annotation=Pathways.reactome, main=&quot;Direction pathway analysis&quot;)</code></pre>
+<p><img src="pathway_files/figure-html/unnamed-chunk-7-1.png" width="768" /></p>
+<pre class="r"><code>dPA2$pathways[1:5,]</code></pre>
+<pre><code>## NULL</code></pre>
+</div>
+<div id="session-info" class="section level1">
+<h1><span class="header-section-number">5</span> Session Info</h1>
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>## R version 3.6.0 (2019-04-26)
+## Platform: x86_64-apple-darwin15.6.0 (64-bit)
+## Running under: macOS  10.15
+## 
+## Matrix products: default
+## BLAS:   /System/Library/Frameworks/Accelerate.framework/Versions/A/Frameworks/vecLib.framework/Versions/A/libBLAS.dylib
+## LAPACK: /Library/Frameworks/R.framework/Versions/3.6/Resources/lib/libRlapack.dylib
+## 
+## locale:
+## [1] en_AU.UTF-8/en_AU.UTF-8/en_AU.UTF-8/C/en_AU.UTF-8/en_AU.UTF-8
+## 
+## attached base packages:
+## [1] parallel  stats4    stats     graphics  grDevices utils     datasets 
+## [8] methods   base     
+## 
+## other attached packages:
+##  [1] Biobase_2.44.0       GenomicRanges_1.36.0 GenomeInfoDb_1.20.0 
+##  [4] IRanges_2.18.0       S4Vectors_0.22.1     BiocGenerics_0.30.0 
+##  [7] scMerge_1.0.0        PhosR_0.1.0          directPA_1.4        
+## [10] calibrate_1.7.2      MASS_7.3-51.4        rgl_0.100.19        
+## 
+## loaded via a namespace (and not attached):
+##   [1] colorspace_1.4-1            RcppEigen_0.3.3.5.0        
+##   [3] class_7.3-15                htmlTable_1.13.1           
+##   [5] XVector_0.24.0              base64enc_0.1-3            
+##   [7] rstudioapi_0.10             proxy_0.4-23               
+##   [9] codetools_0.2-16            splines_3.6.0              
+##  [11] knitr_1.23                  Formula_1.2-3              
+##  [13] jsonlite_1.6                cluster_2.0.9              
+##  [15] shiny_1.3.2                 BiocManager_1.30.4         
+##  [17] compiler_3.6.0              backports_1.1.4            
+##  [19] assertthat_0.2.1            Matrix_1.2-17              
+##  [21] lazyeval_0.2.2              limma_3.40.6               
+##  [23] later_0.8.0                 acepack_1.4.1              
+##  [25] htmltools_0.3.6             tools_3.6.0                
+##  [27] rsvd_1.0.1                  gtable_0.3.0               
+##  [29] glue_1.3.1                  GenomeInfoDbData_1.2.1     
+##  [31] dplyr_0.8.1                 Rcpp_1.0.1                 
+##  [33] bbmle_1.0.20                gdata_2.18.0               
+##  [35] nlme_3.1-140                iterators_1.0.10           
+##  [37] crosstalk_1.0.0             xfun_0.7                   
+##  [39] stringr_1.4.0               mime_0.6                   
+##  [41] miniUI_0.1.1.1              irlba_2.3.3                
+##  [43] gtools_3.8.1                statmod_1.4.32             
+##  [45] dendextend_1.12.0           zlibbioc_1.30.0            
+##  [47] scales_1.0.0                pcaMethods_1.76.0          
+##  [49] promises_1.0.1              SummarizedExperiment_1.14.0
+##  [51] RColorBrewer_1.1-2          SingleCellExperiment_1.6.0 
+##  [53] yaml_2.2.0                  gridExtra_2.3              
+##  [55] ggplot2_3.1.1               rpart_4.1-15               
+##  [57] latticeExtra_0.6-28         stringi_1.4.3              
+##  [59] foreach_1.4.4               e1071_1.7-1                
+##  [61] checkmate_1.9.3             caTools_1.17.1.2           
+##  [63] BiocParallel_1.18.0         manipulateWidget_0.10.0    
+##  [65] rlang_0.4.0                 pkgconfig_2.0.2            
+##  [67] matrixStats_0.55.0          bitops_1.0-6               
+##  [69] M3Drop_1.10.0               evaluate_0.13              
+##  [71] lattice_0.20-38             purrr_0.3.2                
+##  [73] ruv_0.9.7                   htmlwidgets_1.3            
+##  [75] tidyselect_0.2.5            plyr_1.8.4                 
+##  [77] magrittr_1.5                R6_2.4.0                   
+##  [79] gplots_3.0.1.1              Hmisc_4.2-0                
+##  [81] DelayedArray_0.10.0         pillar_1.4.1               
+##  [83] foreign_0.8-71              mgcv_1.8-28                
+##  [85] survival_2.44-1.1           RCurl_1.95-4.12            
+##  [87] nnet_7.3-12                 tibble_2.1.2               
+##  [89] crayon_1.3.4                KernSmooth_2.23-15         
+##  [91] rmarkdown_1.13              viridis_0.5.1              
+##  [93] grid_3.6.0                  data.table_1.12.2          
+##  [95] reldist_1.6-6               digest_0.6.19              
+##  [97] webshot_0.5.1               xtable_1.8-4               
+##  [99] httpuv_1.5.1                numDeriv_2016.8-1          
+## [101] munsell_0.5.0               viridisLite_0.3.0</code></pre>
+</div>
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
