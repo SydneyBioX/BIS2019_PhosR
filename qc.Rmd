@@ -30,7 +30,7 @@ library(PhosR)
 We can load the data into R using the `read.delim()` function. Note that the first row contains header information.
 
 ```{r}
-phospho.raw <- read.delim("/Users/pengyiyang/Dropbox (Sydney Uni)/SMoS/Teaching & Supervision/BioInfoSummer 19/ESC_Phospho (STY)Sites.txt", header = TRUE)
+phospho.raw <- read.delim("./ESC_Phospho (STY)Sites.txt", header = TRUE)
 ```
 
 After reading in the text file, we will extract some useful column information and concatenate them into strings as use them as id for each of our phosphosite in the dataset.
