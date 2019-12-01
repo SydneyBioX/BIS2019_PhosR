@@ -2,6 +2,8 @@ FROM bioconductor/release_base2:R.3.6.1_Bioc3.10
 
 MAINTAINER kevin.wang@sydney.edu.au
 
+ARG DEBIAN_FRONTEND=noninteractive
+
 ## R package installation scripts
 ADD install.R /home/ 
 
