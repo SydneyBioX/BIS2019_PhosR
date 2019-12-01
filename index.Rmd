@@ -43,7 +43,7 @@ devtools::install_github("PengyiYang/PhosR")
 
 You will also need to install CRAN packages `directPA` and `ClueR` for running exmaples provided in the tutorial.
 
-Finally, you can find all the data and materials [here](https://github.com/PengyiYang/PhosR). 
+Finally, you can find all the data and materials [here](https://github.com/SydneyBioX/BIS2019_PhosR). 
 
 
 # References
