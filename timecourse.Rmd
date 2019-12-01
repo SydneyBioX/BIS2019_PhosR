@@ -42,9 +42,9 @@ rownames(phosphoESC.sum) <- toupper(rownames(phosphoESC.sum))
 ```{r, eval = FALSE}
 # NOT RUN. to save the time the following block is not run.
 # perform ClueR to identify optimal number of clusters.
-RNGkind("L'Ecuyer-CMRG")
-set.seed(123)
-c1 <- runClue(phosphoESC.sum, annotation=Pathways.reactome, kRange = 2:30, rep = 5, effectiveSize = c(5, 100), pvalueCutoff = 0.05, alpha = 0.5)
+#RNGkind("L'Ecuyer-CMRG")
+#set.seed(123)
+#c1 <- runClue(phosphoESC.sum, annotation=Pathways.reactome, kRange = 2:30, rep = 5, effectiveSize = c(5, 100), pvalueCutoff = 0.05, alpha = 0.5)
 ```
 
 Visualise the evaluation results
