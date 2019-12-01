@@ -14,7 +14,6 @@ for((userIndex = 1; userIndex <= 60; userIndex++))
 {
   userID=user${userIndex}
   sudo useradd -g trainees -d /home/$userID -m -s /bin/bash $userID
-  sudo mkdir /home/$userID/BIS2019_PhosR/
   sudo cp -r /home/gittmp/* /home/$userID/
   echo $userID:2019 | sudo chpasswd
 }
