@@ -21,26 +21,29 @@ At the end of this workshop you should have the basic understanding of some key 
 
 Ideally, you should be somewhat familiar with `R`. If you haven't used `R` before, you can still pick up key elements in phosphoproteomics data analysis by running the codes I provided. 
 
-Please try to download and install:
+
+# Running examples using Google Cloud
+
+For avoiding issues that may be dependent on your own computer setup, we provide Google Cloud based virtual machine for running all examples in this tutorial. For this option, you need to follow instructions to initiate a Google Cloud virtual machine and type the following in virtual machine RStudio for cloud installation:
+
+`source("install.R")`
+
+# Local installation 
+
+If you have experience in using R and would like to install packages to your local computer which will allow you to analyse data using the packages in future, please first download and install R and RStudio if you don't have them on your local compauter:
 
   + `R 3.6` from https://cloud.r-project.org/ 
   + `RStudio` from https://www.rstudio.com/products/rstudio/download/
 
-
-# Installation 
-
-You can find all the data and materials [here](https://github.com/PengyiYang/PhosR). 
-
-You should be able to run the codes below in `R` to install all the packages needed in this workshop. If you encounter any problems. Please let one of the instructors know. 
+and then install PhosR package as below:
 
 ```{r install, eval = FALSE}
 devtools::install_github("PengyiYang/PhosR")
 ```
 
+You will also need to install CRAN packages `directPA` and `ClueR` for running exmaples provided in the tutorial.
 
-# Clipboard
-
-In some circumstances, we might need to share codes that are not currently a part of the existing materials. Please click [here](https://docs.google.com/document/d/136YffzxjkUM8RIGsnjD_yOkCTWw4Ijdwjy4_58nC-zc/edit?usp=sharing) to access these codes. 
+Finally, you can find all the data and materials [here](https://github.com/PengyiYang/PhosR). 
 
 
 # References
