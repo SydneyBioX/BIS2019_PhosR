@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
 
 <head>
 
 <meta charset="utf-8" />
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
 
 <meta name="author" content="Pengyi Yang" />
@@ -88,7 +88,6 @@ code {
 }
 img {
   max-width:100%;
-  height: auto;
 }
 .tabbed-pane {
   padding-top: 12px;
@@ -237,6 +236,7 @@ $(document).ready(function () {
   border: none;
   display: inline-block;
   border-radius: 4px;
+  background-color: transparent;
 }
 
 .tabset-dropdown > .nav-tabs.nav-tabs-open > li {
@@ -249,56 +249,12 @@ $(document).ready(function () {
 }
 </style>
 
-<script>
-$(document).ready(function () {
-  window.buildTabsets("TOC");
-});
-
-$(document).ready(function () {
-  $('.tabset-dropdown > .nav-tabs > li').click(function () {
-    $(this).parent().toggleClass('nav-tabs-open')
-  });
-});
-</script>
-
 <!-- code folding -->
 <style type="text/css">
 .code-folding-btn { margin-bottom: 4px; }
 </style>
-<script>
-$(document).ready(function () {
-  window.initializeCodeFolding("show" === "show");
-});
-</script>
 
 
-
-<script>
-$(document).ready(function ()  {
-
-    // move toc-ignore selectors from section div to header
-    $('div.section.toc-ignore')
-        .removeClass('toc-ignore')
-        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
-
-    // establish options
-    var options = {
-      selectors: "h1,h2,h3",
-      theme: "bootstrap3",
-      context: '.toc-content',
-      hashGenerator: function (text) {
-        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
-      },
-      ignoreSelector: ".toc-ignore",
-      scrollTo: 0
-    };
-    options.showAndHide = true;
-    options.smoothScroll = true;
-
-    // tocify
-    var toc = $("#TOC").tocify(options).data("toc-tocify");
-});
-</script>
 
 <style type="text/css">
 
@@ -312,6 +268,12 @@ $(document).ready(function ()  {
 }
 }
 
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
 
 .toc-content {
   padding-left: 30px;
@@ -431,7 +393,7 @@ div.tocify {
 
 <div id="introduction" class="section level1">
 <h1><span class="header-section-number">1</span> Introduction</h1>
-<p>Pathway analysis is an essential component in most of omic science. Here, we will introduce basic methods for “1-dimension” pathway analysis; and more advanced methods for implemented in the R package <code>directPA</code> for performing “2 and 3-dimentional” pathway analyses (<a href="https://doi.org/10.1093/bioinformatics/btt616">Pengyi Yang et al. 2014</a>). We will start with proteomic data and look at gene-centric pathways and then extend to phosphoproteomic data and look at signalling pathways.</p>
+<p>Pathway analysis is an essential component in most of omic science. Here, we will introduce basic methods for “1-dimension” pathway analysis; and more advanced methods for implemented in the R package <code>directPA</code> for performing “2 and 3-dimentional” pathway analyses (<a href="https://doi.org/10.1093/bioinformatics/btt616">Pengyi Yang et al. 2014</a>). We will start with proteomic data and look at gene-centric pathways and then extend to phosphoproteomic data and look at signalling pathways.</p>
 <p><strong>Load in packages</strong></p>
 <pre class="r"><code>suppressPackageStartupMessages({
   library(PhosR)
@@ -559,12 +521,12 @@ dPA$gst[order(unlist(dPA$gst[,1])),][1:20,]</code></pre>
 <p>The above demonstrated some gene-centric pathway analyses using proteomic data. Now, we will use the same methodology for testing kinase enrichment in phosphoproteomic data.</p>
 <div id="embryonic-stem-cell-differentiation-phosphoproteomic-dataset" class="section level2">
 <h2><span class="header-section-number">3.1</span> Embryonic stem cell differentiation phosphoproteomic dataset</h2>
-<p>In this section, we will use an embryonic stem cell (ESC) differentiation dataset for demonstration. This dataset contains 12 time points profiling the transition of ESCs to epiblast-like cells (EpiLCs). Details regarding the dataset can be found in (<a href="https://doi.org/10.1016/j.cels.2019.03.012">Pengyi Yang et al. 2019</a>). The quantification of the phophorylation at each time point were converted into log2 fold change with respect to the first time point of 0 hour.</p>
+<p>In this section, we will use an embryonic stem cell (ESC) differentiation dataset for demonstration. This dataset contains 12 time points profiling the transition of ESCs to epiblast-like cells (EpiLCs). Details regarding the dataset can be found in (<a href="https://doi.org/10.1016/j.cels.2019.03.012">Pengyi Yang et al. 2019</a>). The quantification of the phophorylation at each time point were converted into log2 fold change with respect to the first time point of 0 hour.</p>
 <p>This dataset is included in the package <code>PhosR</code>. We can load this example dataset into current working environment as <code>data(phosphoESC)</code>.</p>
 </div>
 <div id="d-signalling-pathway-analysis-using-directpa" class="section level2">
 <h2><span class="header-section-number">3.2</span> 2D signalling pathway analysis using directPA</h2>
-<p>One key aspect in studying signalling pathways is to identify key kinases that are involved in signalling cascades. To identify these kinases, we make use of kinase-substrate annotation databases such as PhosphoSitePlus (<a href="https://dx.doi.org/10.1093/nar/gkr1122">Hornbeck et al. 2012</a>) and Phospho.ELM (<a href="https://dx.doi.org/10.1093/nar/gkq1104">Dinkel et al. 2011</a>). These databases are included in the <code>PhosR</code> and <code>directPA</code> packages already. To access them, simply load the package and access the data by <code>data(&quot;PhosphoSitePlus&quot;)</code> and <code>data(&quot;PhosphoELM&quot;)</code>.</p>
+<p>One key aspect in studying signalling pathways is to identify key kinases that are involved in signalling cascades. To identify these kinases, we make use of kinase-substrate annotation databases such as PhosphoSitePlus (<a href="https://dx.doi.org/10.1093/nar/gkr1122">Hornbeck et al. 2012</a>) and Phospho.ELM (<a href="https://dx.doi.org/10.1093/nar/gkq1104">Dinkel et al. 2011</a>). These databases are included in the <code>PhosR</code> and <code>directPA</code> packages already. To access them, simply load the package and access the data by <code>data("PhosphoSitePlus")</code> and <code>data("PhosphoELM")</code>.</p>
 <p>Back to the example. Now, suppose we partition the signalling into early (5-15 minutes) and late (24-48h) stages during the differentiation process, we can then identify kinases that are active in these time points by testing kinase-substrates that are up-regulated in phosphorylation level in both time points as below:</p>
 <pre class="r"><code>par(mfrow=c(1,2))
 data(&quot;phosphoESC&quot;)
@@ -588,7 +550,7 @@ kPA1$kinase[1:5,]</code></pre>
 ## Yang.GSK3 3.716738e-19 14  
 ## p70S6K    1.390567e-14 12  
 ## Yang.mTOR 1.323561e-12 47</code></pre>
-<p>There is also a function called <code>perturbPlot2d</code> for testing and visualising activity of all kinases on all possible directions. Below are the results from using this function. Details of this function and its implementation is described in our publication <strong>kinase perturbation analysis</strong> (<strong>kinasePA</strong>) (<a href="https://doi.org/10.1002/pmic.201600068">Yang et al. 2016</a>).</p>
+<p>There is also a function called <code>perturbPlot2d</code> for testing and visualising activity of all kinases on all possible directions. Below are the results from using this function. Details of this function and its implementation is described in our publication <strong>kinase perturbation analysis</strong> (<strong>kinasePA</strong>) (<a href="https://doi.org/10.1002/pmic.201600068">Yang et al. 2016</a>).</p>
 <pre class="r"><code>z1 &lt;- perturbPlot2d(Tc=phosphoESC[,c(&quot;X5m&quot;,&quot;X15m&quot;)], annotation=PhosphoSite.mouse, cex=1, xlim=c(-5, 12), ylim=c(-5, 11), main=&quot;Kinase perturbation analysis&quot;)</code></pre>
 <p><img src="pathway_files/figure-html/unnamed-chunk-6-1.png" width="768" /></p>
 <pre class="r"><code>z2 &lt;- perturbPlot2d(Tc=phosphoESC[,c(&quot;X24h&quot;,&quot;X48h&quot;)], annotation=PhosphoSite.mouse, cex=1, xlim=c(-5, 11), ylim=c(-5, 11), main=&quot;Kinase perturbation analysis&quot;)</code></pre>
@@ -630,12 +592,12 @@ dPA1$pathways[1:5,]</code></pre>
 <div id="session-info" class="section level1">
 <h1><span class="header-section-number">5</span> Session Info</h1>
 <pre class="r"><code>sessionInfo()</code></pre>
-<pre><code>## R version 3.6.0 (2019-04-26)
+<pre><code>## R version 3.6.1 (2019-07-05)
 ## Platform: x86_64-apple-darwin15.6.0 (64-bit)
-## Running under: macOS  10.15
+## Running under: macOS Mojave 10.14.6
 ## 
 ## Matrix products: default
-## BLAS:   /System/Library/Frameworks/Accelerate.framework/Versions/A/Frameworks/vecLib.framework/Versions/A/libBLAS.dylib
+## BLAS:   /Library/Frameworks/R.framework/Versions/3.6/Resources/lib/libRblas.0.dylib
 ## LAPACK: /Library/Frameworks/R.framework/Versions/3.6/Resources/lib/libRlapack.dylib
 ## 
 ## locale:
@@ -645,39 +607,29 @@ dPA1$pathways[1:5,]</code></pre>
 ## [1] stats     graphics  grDevices utils     datasets  methods   base     
 ## 
 ## other attached packages:
-## [1] directPA_1.4    limma_3.40.6    Rtsne_0.15      calibrate_1.7.2
-## [5] MASS_7.3-51.4   PhosR_0.1.0    
+## [1] directPA_1.4 PhosR_0.1.0 
 ## 
 ## loaded via a namespace (and not attached):
-##  [1] tidyselect_0.2.5        xfun_0.7               
-##  [3] purrr_0.3.2             colorspace_1.4-1       
-##  [5] miniUI_0.1.1.1          htmltools_0.3.6        
-##  [7] viridisLite_0.3.0       yaml_2.2.0             
-##  [9] rlang_0.4.0             manipulateWidget_0.10.0
-## [11] e1071_1.7-1             pillar_1.4.1           
-## [13] later_0.8.0             glue_1.3.1             
-## [15] BiocGenerics_0.30.0     plyr_1.8.4             
-## [17] stringr_1.4.0           munsell_0.5.0          
-## [19] pcaMethods_1.76.0       gtable_0.3.0           
-## [21] htmlwidgets_1.3         evaluate_0.13          
-## [23] Biobase_2.44.0          knitr_1.23             
-## [25] httpuv_1.5.1            crosstalk_1.0.0        
-## [27] parallel_3.6.0          class_7.3-15           
-## [29] Rcpp_1.0.1              xtable_1.8-4           
-## [31] scales_1.0.0            promises_1.0.1         
-## [33] webshot_0.5.1           jsonlite_1.6           
-## [35] mime_0.6                gridExtra_2.3          
-## [37] ggplot2_3.1.1           digest_0.6.19          
-## [39] stringi_1.4.3           dplyr_0.8.1            
-## [41] shiny_1.3.2             grid_3.6.0             
-## [43] tools_3.6.0             magrittr_1.5           
-## [45] rgl_0.100.19            lazyeval_0.2.2         
-## [47] tibble_2.1.2            crayon_1.3.4           
-## [49] pkgconfig_2.0.2         dendextend_1.12.0      
-## [51] ruv_0.9.7               assertthat_0.2.1       
-## [53] rmarkdown_1.13          rstudioapi_0.10        
-## [55] viridis_0.5.1           R6_2.4.0               
-## [57] mclust_5.4.3            compiler_3.6.0</code></pre>
+##  [1] tidyselect_0.2.5        xfun_0.11               purrr_0.3.3            
+##  [4] colorspace_1.4-1        miniUI_0.1.1.1          htmltools_0.4.0        
+##  [7] viridisLite_0.3.0       yaml_2.2.0              rlang_0.4.2            
+## [10] manipulateWidget_0.10.0 e1071_1.7-3             pillar_1.4.2           
+## [13] later_1.0.0             glue_1.3.1              BiocGenerics_0.32.0    
+## [16] calibrate_1.7.5         lifecycle_0.1.0         stringr_1.4.0          
+## [19] munsell_0.5.0           pcaMethods_1.78.0       gtable_0.3.0           
+## [22] htmlwidgets_1.5.1       evaluate_0.14           Biobase_2.46.0         
+## [25] knitr_1.26              fastmap_1.0.1           httpuv_1.5.2           
+## [28] crosstalk_1.0.0         parallel_3.6.1          class_7.3-15           
+## [31] Rcpp_1.0.3              xtable_1.8-4            scales_1.1.0           
+## [34] promises_1.1.0          limma_3.42.0            webshot_0.5.2          
+## [37] jsonlite_1.6            mime_0.7                gridExtra_2.3          
+## [40] ggplot2_3.2.1           digest_0.6.23           stringi_1.4.3          
+## [43] dplyr_0.8.3             shiny_1.4.0             grid_3.6.1             
+## [46] tools_3.6.1             magrittr_1.5            rgl_0.100.30           
+## [49] lazyeval_0.2.2          tibble_2.1.3            crayon_1.3.4           
+## [52] pkgconfig_2.0.3         dendextend_1.12.0       MASS_7.3-51.4          
+## [55] ruv_0.9.7.1             assertthat_0.2.1        rmarkdown_1.18         
+## [58] viridis_0.5.1           R6_2.4.1                compiler_3.6.1</code></pre>
 </div>
 
 
@@ -698,6 +650,54 @@ $(document).ready(function () {
 });
 
 
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+<script>
+$(document).ready(function () {
+  window.initializeCodeFolding("show" === "show");
+});
+</script>
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
 </script>
 
 <!-- dynamically load mathjax for compatibility with self-contained -->

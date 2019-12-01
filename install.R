@@ -11,7 +11,7 @@ if(BiocManager::version() != "3.10"){
                          update=TRUE, ask=FALSE)
 }
 
-std_pkgs <- c("remotes", "directPA", "ClueR", "ggplot2", "parallel")
+std_pkgs <- c("remotes", "directPA", "ClueR", "ggplot2", "parallel", "rmarkdown")
 
 gh_pkgs <- c("PengyiYang/PhosR")
 
