@@ -1,4 +1,4 @@
-FROM bioconductor/devel_core2
+FROM bioconductor/release_base2:R.3.6.1_Bioc3.10
 
 MAINTAINER kevin.wang@sydney.edu.au
 
@@ -8,20 +8,8 @@ ADD install.R /home/
 ## Setup folder structure
 ADD docker_setup.sh /home/
 
-## Set up tests for Docker compile, large memory, use config.yaml when building Docker
-ADD docker_test.R /home/   
-
-## Users should source this script to set up their folder
-ADD user_setup.R /home/   
-
-## Emergency script
-ADD omg.R /home/ 
-
 ## Set up data and teaching materials
 RUN sh /home/docker_setup.sh 
 
 ## Install all R packages
 RUN R -f /home/install.R
-
-## Running test
-RUN R -f /home/docker_test.R
