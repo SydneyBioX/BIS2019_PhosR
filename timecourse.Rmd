@@ -50,7 +50,7 @@ rownames(phosphoESC.sum) <- toupper(rownames(phosphoESC.sum))
 Visualise the evaluation results
 
 ```{r}
-load("phosphoESC_cluster.RData")
+load("./phosphoESC_cluster.RData")
 
 data <- data.frame(Success=as.numeric(c1$evlMat), Freq=rep(2:30, each=5))
 myplot <- ggplot(data, aes(x=Freq, y=Success)) + geom_boxplot(aes(x = factor(Freq), fill="gray"))+
