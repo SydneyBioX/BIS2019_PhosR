@@ -24,9 +24,7 @@ Ideally, you should be somewhat familiar with `R`. If you haven't used `R` befor
 
 # Running examples using Google Cloud
 
-For avoiding issues that may be dependent on your own computer setup, we provide Google Cloud based virtual machine for running all examples in this tutorial. For this option, you need to follow instructions to initiate a Google Cloud virtual machine and type the following in virtual machine RStudio for cloud installation:
-
-`source("install.R")`
+For avoiding issues that may be dependent on your own computer setup, we provide Google Cloud based virtual machine for running all examples in this tutorial. For this option, you need to follow instructions to initiate a Google Cloud virtual machine.
 
 # Local installation 
 
