@@ -1,10 +1,14 @@
 #!/bin/bash
-sudo apt-get update
-sudo apt-get -y install r-cran-rgl
-sudo apt-get -y install xorg 
-sudo apt-get -y install libx11-dev 
-sudo apt-get -y install libglu1-mesa-dev 
-sudo apt-get -y install libfreetype6-dev
+
+apt-get update \
+ && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    r-cran-rgl \
+    xorg \
+    libx11-dev \
+    libglu1-mesa-dev \
+    libfreetype6-dev \
+ && apt-get clean \
+ && rm -rf /var/lib/apt/lists/*
 
 ## Make a tmp folder and git clone
 ## All git files will then be copied to /home/SingleCellPlus/
